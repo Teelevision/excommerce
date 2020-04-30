@@ -1,0 +1,36 @@
+openapi: 3.0.3
+info:
+  title: EXCommerce
+  description: EXCommerce is an example commerce system.
+  version: beta
+
+servers:
+- url: http://localhost:8080/beta
+
+paths:
+
+  /products:
+    get:
+      description: Get all products.
+      responses:
+        200:
+          description: A list of producs.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Product"
+
+components:
+  schemas:
+    Product:
+      description: A product of the shop.
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 0061f256-d4b8-4dd3-85e3-aaaa88a050d2
+        name:
+          type: string
+          example: Orange
