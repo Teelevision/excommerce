@@ -53,3 +53,39 @@ Example Commerce System
 |                                            |          |                                             |
 +--------------------------------------------+          +---------------------------------------------+
 ```
+
+Guest orders a product:
+
+```
++----------------------+     +----------------------+     +----------------------+
+| User                 |     | Frontend             |     | Backend              |
++----------------------+     +----------------------+     +----------------------+
+|                      |     |                      |     |                      |
+| adds product to cart +-----> stores cart in local |     |                      |
+|                      |     | storage              |     |                      |
+|                      |     |                      |     |                      |
+| goes to checkout     +-----> requires login       |     |                      |
+|                      |     |                      |     |                      |
+|                      <-----+ show login           |     |                      |
+|                      |     |                      |     |                      |
+| want to create acc   +----->                      |     |                      |
+|                      |     |                      |     |                      |
+|                      <-----+ show register        |     |                      |
+|                      |     |                      |     |                      |
+| register             +----------------------------------> create user          |
+|                      |     |                      |     |                      |
+|                      |     | store user creds     <-----+                      |
+|                      |     |                      |     |                      |
+|                      |     | store cart on server +----->                      |
+|                      |     |                      |     |                      |
+|                      <-----+ show checkout        |     |                      |
+|                      |     |                      |     |                      |
+| submit payment info  +------- add cart info ------------> lock cart, validate  |
+|                      |     |                      |     | and store order      |
+|                      |     |                      |     |                      |
+|                      |     | clear cart           <-----+ order details        |
+|                      |     |                      |     |                      |
+|                      <-----+ show order details   |     |                      |
+|                      |     |                      |     |                      |
++----------------------+     +----------------------+     +----------------------+
+```
