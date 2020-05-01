@@ -76,9 +76,16 @@ Guest orders a product:
 |                      |     |                      |     |                      |
 |                      |     | store user creds     <-----+                      |
 |                      |     |                      |     |                      |
-|                      |     | store cart on server +----->                      |
+|                      |     | store cart on server +-----> apply discounts &    |
+|                      |     |                      |     | store cart           |
+|                      |     |                      |     |                      |
+|                      |     | update local cart    <-----+                      |
 |                      |     |                      |     |                      |
 |                      <-----+ show checkout        |     |                      |
+|                      |     |                      |     |                      |
+| enter coupon         +------- add cart info ------------> validate order       |
+|                      |     |                      |     |                      |
+|                      <-----+ show order details   <-----+ order details        |
 |                      |     |                      |     |                      |
 | submit payment info  +------- add cart info ------------> lock cart, validate  |
 |                      |     |                      |     | and store order      |
