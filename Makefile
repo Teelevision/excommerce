@@ -1,4 +1,4 @@
-.PHONY: openapi redoc
+.PHONY: openapi redoc build
 
 openapi: api/openapi.yaml
 	docker run --rm -v ${PWD}:/local \
@@ -14,3 +14,6 @@ redoc:
 		-v ${PWD}/api/openapi.yaml:/usr/share/nginx/html/openapi.yaml:ro \
 		-e SPEC_URL=openapi.yaml \
 		redocly/redoc
+
+build:
+	docker build -t excommerce .
