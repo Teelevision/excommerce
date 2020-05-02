@@ -9,9 +9,71 @@ servers:
 
 paths:
 
+  /users:
+
+    post:
+      summary: Register a user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        200:
+          description: User was created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        409:
+          description: Name already taken.
+        422:
+          description: The input is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MalformedInputError"
+              example:
+                message: The password must be at least 8 characters long.
+                pointer: /password
+        5XX:
+          $ref: "#/components/responses/5XX"
+
+  /users/login:
+
+    post:
+      summary: Login a user
+      description: You log in using the user's name and password and you'll get
+        the user id as a result. The user id in combination with the password
+        can be used in a basic auth header to authenticate during the checkout.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              required:
+                - name
+                - password
+              properties:
+                name:
+                  $ref: "#/components/schemas/User/properties/name"
+                password:
+                  $ref: "#/components/schemas/User/properties/password"
+      responses:
+        200:
+          description: User exists.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        404:
+          description: User does not exist or password is incorrect.
+        5XX:
+          $ref: "#/components/responses/5XX"
+
   /products:
+
     get:
-      description: Get all products.
+      summary: Get all products
       responses:
         200:
           description: A list of producs.
@@ -21,16 +83,259 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Product"
+        5XX:
+          $ref: "#/components/responses/5XX"
+
+  /carts/unlocked:
+
+    get:
+      tags:
+        - Carts
+      summary: Get all carts
+      description: Get all unlocked carts of the current user.
+      security:
+        - basicAuth: []
+      responses:
+        200:
+          description: A list of carts.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Cart"
+        401:
+          description: You are not authenticated.
+        5XX:
+          $ref: "#/components/responses/5XX"
+
+  /carts/{cartId}:
+
+    get:
+      tags:
+        - Carts
+      summary: Get a cart
+      description: Get a cart of the current user.
+      security:
+        - basicAuth: []
+      parameters:
+        - in: path
+          name: cartId
+          description: The card UUID.
+          schema:
+            type: string
+          required: true
+      responses:
+        200:
+          description: The cart.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        401:
+          description: You are not authenticated.
+        404:
+          description: Cart not found.
+        410:
+          description: The cart was deleted.
+        5XX:
+          $ref: "#/components/responses/5XX"
+
+    put:
+      tags:
+        - Carts
+      summary: Store a cart
+      description: Store a cart for the current user. If this cart exists it is
+        updated.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Cart"
+      responses:
+        200:
+          description: The cart was updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        201:
+          description: New cart was stored.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Cart"
+        401:
+          description: You are not authenticated.
+        403:
+          description: You are forbidden to update this cart.
+        410:
+          description: The cart was deleted.
+        422:
+          description: The input is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MalformedInputError"
+              example:
+                message: Product unknown.
+                pointer: /positions/0/product/id
+        423:
+          description: The cart is locked and cannot be updated.
+        5XX:
+          $ref: "#/components/responses/5XX"
+
+    delete:
+      tags:
+        - Carts
+      summary: Delete a cart
+      description: Delete a cart of the current user.
+      responses:
+        204:
+          description: The cart was deleted.
+        401:
+          description: You are not authenticated.
+        403:
+          description: You are forbidden to delete this cart.
+        404:
+          description: The cart does not exist.
+        423:
+          description: The cart is locked and cannot be deleted.
+        5XX:
+          $ref: "#/components/responses/5XX"
 
 components:
+  responses:
+
+    5XX:
+      description: Unexpected error.
+      content:
+        application/json:
+          schema:
+            properties:
+              message:
+                type: string
+                description: A human-readable message about what went wrong.
+                example: Unexpected error.
+
   schemas:
-    Product:
-      description: A product of the shop.
+
+    MalformedInputError:
+      description: The input is invalid.
+      required:
+        - message
+        - pointer
+      properties:
+        message:
+          type: string
+          description: A human-readable message about what went wrong.
+        pointer:
+          type: string
+          format: json pointer
+          description: A JSON Pointer to the incorrect input value.
+
+    User:
+      description: A user of the shop.
+      required:
+        - id
+        - name
+        - password
       properties:
         id:
           type: string
           format: uuid
+          readOnly: true
+          description: The UUID of the user.
+          example: eb29a69f-d2f1-4217-9787-5797a44bd81a
+        name:
+          type: string
+          description: The unique name of the user.
+          minLength: 1
+          maxLength: 64
+          example: strobbery
+        password:
+          type: string
+          format: password
+          writeOnly: true
+          minLength: 8
+          maxLength: 64
+          description: The plain text password of the user.
+          example: correct horse battery staple
+
+    Product:
+      description: A product of the shop.
+      required:
+        - name
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: The UUID of the product. If a product has no id it is a
+            virtual product, like a discount, and only for displaying purposes.
           example: 0061f256-d4b8-4dd3-85e3-aaaa88a050d2
         name:
           type: string
+          readOnly: true
+          description: The display name of the product.
+          minLength: 1
           example: Orange
+        price:
+          type: number
+          readOnly: true
+          format: float
+          description: The price of a single item of the product.
+          example: 13.37
+
+    Position:
+      description: A position in a cart.
+      required:
+        - quantity
+        - product
+        - price
+      properties:
+        quantity:
+          type: integer
+          minimum: 1
+          description: The quantity of the position.
+          example: 3
+        product:
+          $ref: "#/components/schemas/Product"
+        price:
+          type: number
+          format: float
+          readOnly: true
+          description: The total price of this position.
+          example: 40.11
+
+    Cart:
+      description: A cart containing products.
+      required:
+        - id
+        - positions
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+          description: The UUID of the cart.
+          example: 2c3573ab-1d57-46bf-b979-5eaac02d850b
+        positions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Position"
+        locked:
+          type: boolean
+          readOnly: true
+          description: Whether the cart is locked.
+          default: false
+
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Use the user's id and password to generate the basic auth
+        value. To get the id of a user from the user's name use the
+        `/users/login` endpoint.
