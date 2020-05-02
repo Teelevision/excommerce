@@ -86,7 +86,7 @@ paths:
         5XX:
           $ref: "#/components/responses/5XX"
 
-  /carts/unlocked:
+  /carts?locked=false:
 
     get:
       tags:
