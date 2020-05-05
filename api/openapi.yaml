@@ -86,7 +86,7 @@ paths:
         5XX:
           $ref: "#/components/responses/5XX"
 
-  /carts?locked=false:
+  /carts:
 
     get:
       tags:
@@ -95,6 +95,15 @@ paths:
       description: Get all unlocked carts of the current user.
       security:
         - basicAuth: []
+      parameters:
+        - in: query
+          name: locked
+          description: Filter by the carts' locked status.
+          schema:
+            type: boolean
+            enum:
+              - false
+          required: true
       responses:
         200:
           description: A list of carts.
@@ -110,6 +119,8 @@ paths:
           $ref: "#/components/responses/5XX"
 
   /carts/{cartId}:
+    parameters:
+      - $ref: '#/components/parameters/cartId'
 
     get:
       tags:
@@ -118,13 +129,6 @@ paths:
       description: Get a cart of the current user.
       security:
         - basicAuth: []
-      parameters:
-        - in: path
-          name: cartId
-          description: The card UUID.
-          schema:
-            type: string
-          required: true
       responses:
         200:
           description: The cart.
@@ -208,6 +212,8 @@ paths:
           $ref: "#/components/responses/5XX"
 
   /carts/{cartId}/prepareOrder:
+    parameters:
+      - $ref: '#/components/parameters/cartId'
 
     post:
       tags:
@@ -266,6 +272,8 @@ paths:
           $ref: "#/components/responses/5XX"
 
   /orders/{orderId}:
+    parameters:
+      - $ref: '#/components/parameters/orderId'
 
     get:
       tags:
@@ -299,6 +307,8 @@ paths:
           $ref: "#/components/responses/5XX"
 
   /orders/{orderId}/place:
+    parameters:
+      - $ref: '#/components/parameters/orderId'
 
     post:
       tags:
@@ -366,6 +376,26 @@ paths:
           $ref: "#/components/responses/5XX"
 
 components:
+  parameters:
+    
+    cartId:
+      in: path
+      name: cartId
+      description: The cart UUID.
+      schema:
+        type: string
+        format: uuid
+      required: true
+    
+    orderId:
+      in: path
+      name: orderId
+      description: The order UUID.
+      schema:
+        type: string
+        format: uuid
+      required: true
+
   responses:
 
     5XX:
