@@ -269,13 +269,6 @@ paths:
           description: The order is valid. Use the ETag when placing the order
             to make sure that the order did not change in the meantime.
           headers:
-            Location:
-              required: true
-              schema:
-                type: string
-                format: url
-                description: The location of the order.
-                example: /orders/ba3e44b1-59ea-4325-a8a8-600f3a081e73
             ETag:
               required: true
               schema:
@@ -306,41 +299,6 @@ paths:
                 pointer: /recipient/street
         423:
           description: The cart is locked and cannot be ordered.
-        5XX:
-          $ref: "#/components/responses/5XX"
-
-  /orders/{orderId}:
-    parameters:
-      - $ref: '#/components/parameters/orderId'
-
-    get:
-      tags:
-        - Orders
-      summary: Get order
-      description: Get an order of the current user.
-      responses:
-        200:
-          description: The prepared order.
-          headers:
-            ETag:
-              required: true
-              schema:
-                type: string
-                format: ETag
-                description: The ETag of the order.
-                example: W/"b1874120027824627b0b23410bb814b3e80e886d5247b20802a5ce465da0cc8f"
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Order"
-        401:
-          description: You are not authenticated.
-        403:
-          description: You are forbidden to access this order.
-        404:
-          description: The order was not found.
-        410:
-          description: The order was deleted.
         5XX:
           $ref: "#/components/responses/5XX"
 
