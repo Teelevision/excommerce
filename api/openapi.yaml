@@ -73,7 +73,10 @@ paths:
   /products:
 
     get:
+      tags:
+        - Products
       summary: Get all products
+      description: Get all products.
       responses:
         200:
           description: A list of producs.
@@ -83,6 +86,41 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Product"
+        5XX:
+          $ref: "#/components/responses/5XX"
+
+  /products/{productId}/coupon/{couponCode}:
+    parameters:
+      - $ref: '#/components/parameters/productId'
+      - $ref: '#/components/parameters/couponCode'
+
+    put:
+      tags:
+        - Products
+      summary: Create product coupon
+      description: Create a coupon for the product. This api requires admin
+        access.
+      security:
+        - basicAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Coupon"
+      responses:
+        200:
+          description: The created/updated coupon.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Coupon"
+        401:
+          description: You are not authenticated.
+        403:
+          description: You are forbidden to create a coupon for this product.
+        404:
+          description: The product was not found.
         5XX:
           $ref: "#/components/responses/5XX"
 
@@ -347,21 +385,18 @@ paths:
                   postalCode: 10557
                   city: Berlin
                   street: Willy-Brandt-Straße 1
-                cart:
-                  id: 2c3573ab-1d57-46bf-b979-5eaac02d850b
-                  positions:
-                    - quantity: 3
-                      product:
-                        id: 0061f256-d4b8-4dd3-85e3-aaaa88a050d2
-                        name: Orange
-                        price: 13.37
-                      price: 40.11
-                    - quantity: 1
-                      product:
-                        name: 10% Discount for orders above 30,-
-                        price: -4.01
-                      price: -4.01
-                  locked: true
+                positions:
+                  - quantity: 3
+                    product:
+                      id: 0061f256-d4b8-4dd3-85e3-aaaa88a050d2
+                      name: Orange
+                      price: 13.37
+                    price: 40.11
+                  - quantity: 1
+                    product:
+                      name: 30% off oranges
+                      price: -12.03
+                    price: -12.03
         401:
           description: You are not authenticated.
         403:
@@ -377,7 +412,7 @@ paths:
 
 components:
   parameters:
-    
+
     cartId:
       in: path
       name: cartId
@@ -386,7 +421,8 @@ components:
         type: string
         format: uuid
       required: true
-    
+      example: 2c3573ab-1d57-46bf-b979-5eaac02d850b
+
     orderId:
       in: path
       name: orderId
@@ -395,6 +431,26 @@ components:
         type: string
         format: uuid
       required: true
+      example: ba3e44b1-59ea-4325-a8a8-600f3a081e73
+
+    productId:
+      in: path
+      name: productId
+      description: The product UUID.
+      schema:
+        type: string
+        format: uuid
+      required: true
+      example: 0061f256-d4b8-4dd3-85e3-aaaa88a050d2
+
+    couponCode:
+      in: path
+      name: couponCode
+      description: The coupon code.
+      schema:
+        type: string
+      required: true
+      example: ORANGE30
 
   responses:
 
@@ -528,7 +584,7 @@ components:
         - price
         - buyer
         - recipient
-        - cart
+        - positions
       properties:
         id:
           type: string
@@ -549,15 +605,34 @@ components:
           format: float
           readOnly: true
           description: The total price of this order.
-          example: 40.11
+          example: 28.08
         buyer:
           $ref: "#/components/schemas/Address"
         recipient:
           $ref: "#/components/schemas/Address"
-        cart:
+        coupons:
+          type: array
+          items:
+            $ref: "#/components/schemas/Coupon/properties/code"
+          uniqueItems: true
+        positions:
           allOf:
-            - $ref: "#/components/schemas/Cart"
+            - type: array
+              items:
+                $ref: "#/components/schemas/Position"
             - readOnly: true
+              example:
+                - quantity: 3
+                  product:
+                    id: 0061f256-d4b8-4dd3-85e3-aaaa88a050d2
+                    name: Orange
+                    price: 13.37
+                  price: 40.11
+                - quantity: 1
+                  product:
+                    name: 30% off oranges
+                    price: -12.03
+                  price: -12.03
         
     Address:
       description: An address or a person, company or similar.
@@ -589,6 +664,40 @@ components:
           type: string
           description: The street name, number and any suffixes.
           example: Willy-Brandt-Straße 1
+
+    Coupon:
+      description: A coupon for a product that can be used during checkout.
+      required:
+        - name
+        - code
+        - discount
+        - product
+      properties:
+        name:
+          type: string
+          description: The coupon display text.
+          example: 30% off oranges
+        code:
+          type: string
+          readOnly: true
+          description: The coupon code.
+          example: ORANGE30
+        discount:
+          type: integer
+          minimum: 1
+          maximum: 100
+          description: The discount in percent on the product price.
+          example: 30
+        product:
+          allOf:
+            - $ref: "#/components/schemas/Product"
+            - readOnly: true
+        expiresAt:
+          type: string
+          format: date-time
+          description: The time when this coupon exires. If omitted the server
+            chooses a time in the future.
+          example: 2020-05-05T17:32:28+02:00
 
   securitySchemes:
     basicAuth:
