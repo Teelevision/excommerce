@@ -266,16 +266,7 @@ paths:
               $ref: "#/components/schemas/Order"
       responses:
         200:
-          description: The order is valid. Use the ETag when placing the order
-            to make sure that the order did not change in the meantime.
-          headers:
-            ETag:
-              required: true
-              schema:
-                type: string
-                format: ETag
-                description: The ETag of the order.
-                example: W/"b1874120027824627b0b23410bb814b3e80e886d5247b20802a5ce465da0cc8f"
+          description: The order is valid.
           content:
             application/json:
               schema:
@@ -311,15 +302,6 @@ paths:
         - Orders
       summary: Place order
       description: Place an order of the current user.
-      parameters:
-        - in: header
-          name: If-Match
-          schema:
-            type: string
-          required: true
-          description: The ETag of the order to place. This makes sure that the
-            order did not change in the meantime.
-          example: W/"b1874120027824627b0b23410bb814b3e80e886d5247b20802a5ce465da0cc8f"
       responses:
         200:
           description: The placed order.
@@ -362,7 +344,10 @@ paths:
         404:
           description: The order was not found.
         410:
-          description: The order was deleted.
+          description: The order is not valid anymore. This happens if anything
+            about the order changes. For example the cart the order relies on
+            was updated, or a coupon expired. The server may invalidate orders
+            for any reason.
         423:
           description: The order is locked and cannot be placed.
         5XX:
