@@ -121,6 +121,15 @@ paths:
           description: You are forbidden to create a coupon for this product.
         404:
           description: The product was not found.
+        422:
+          description: The input is invalid.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MalformedInputError"
+              example:
+                message: The name needs to be between 1-100 characters long.
+                pointer: /name
         5XX:
           $ref: "#/components/responses/5XX"
 
@@ -226,7 +235,8 @@ paths:
                 message: Product unknown.
                 pointer: /positions/0/product/id
         423:
-          description: The cart is locked and cannot be updated.
+          description: The cart is locked and cannot be updated. A cart is
+            locked if there is a placed order for that cart.
         5XX:
           $ref: "#/components/responses/5XX"
 
@@ -245,7 +255,8 @@ paths:
         404:
           description: The cart does not exist.
         423:
-          description: The cart is locked and cannot be deleted.
+          description: The cart is locked and cannot be deleted. A cart is
+            locked if there is a placed order for that cart.
         5XX:
           $ref: "#/components/responses/5XX"
 
@@ -289,7 +300,8 @@ paths:
                 message: The street is missing in the recipient's address.
                 pointer: /recipient/street
         423:
-          description: The cart is locked and cannot be ordered.
+          description: The cart is locked and cannot be ordered. A cart is
+            locked if there already is a placed order for that cart.
         5XX:
           $ref: "#/components/responses/5XX"
 
@@ -349,7 +361,8 @@ paths:
             was updated, or a coupon expired. The server may invalidate orders
             for any reason.
         423:
-          description: The order is locked and cannot be placed.
+          description: The order is locked and cannot be placed. An order might
+            be locked because it was already placed.
         5XX:
           $ref: "#/components/responses/5XX"
 
@@ -389,11 +402,13 @@ components:
     couponCode:
       in: path
       name: couponCode
-      description: The coupon code.
+      description: The case-insensitive coupon code.
       schema:
         type: string
+        minLength: 6
+        maxLength: 40
       required: true
-      example: ORANGE30
+      example: orange30
 
   responses:
 
@@ -618,12 +633,14 @@ components:
       properties:
         name:
           type: string
+          minLength: 1
+          maxLength: 100
           description: The coupon display text.
           example: 30% off oranges
         code:
           type: string
           readOnly: true
-          description: The coupon code.
+          description: The case-insensitive coupon code.
           example: ORANGE30
         discount:
           type: integer
