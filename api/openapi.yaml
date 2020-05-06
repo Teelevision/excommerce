@@ -50,14 +50,7 @@ paths:
         content:
           application/json:
             schema:
-              required:
-                - name
-                - password
-              properties:
-                name:
-                  $ref: "#/components/schemas/User/properties/name"
-                password:
-                  $ref: "#/components/schemas/User/properties/password"
+              $ref: "#/components/schemas/LoginForm"
       responses:
         200:
           description: User exists.
@@ -423,6 +416,17 @@ components:
                 example: Unexpected error.
 
   schemas:
+
+    LoginForm:
+      description: Login form
+      required:
+        - name
+        - password
+      properties:
+        name:
+          $ref: "#/components/schemas/User/properties/name"
+        password:
+          $ref: "#/components/schemas/User/properties/password"
 
     MalformedInputError:
       description: The input is invalid.
