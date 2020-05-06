@@ -12,6 +12,8 @@ paths:
   /users:
 
     post:
+      tags:
+        - Users
       summary: Register a user
       requestBody:
         content:
@@ -42,6 +44,8 @@ paths:
   /users/login:
 
     post:
+      tags:
+        - Users
       summary: Login a user
       description: You log in using the user's name and password and you'll get
         the user id as a result. The user id in combination with the password
