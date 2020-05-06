@@ -73,7 +73,7 @@ func (c *CartsApiController) DeleteCart(w http.ResponseWriter, r *http.Request) 
 // GetAllCarts - Get all carts
 func (c *CartsApiController) GetAllCarts(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
-	locked := query.Get("locked")
+	locked := query.Get("locked") == "true"
 	result, err := c.service.GetAllCarts(locked)
 	if err != nil {
 		w.WriteHeader(500)

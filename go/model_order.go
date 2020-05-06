@@ -25,7 +25,7 @@ type Order struct {
 
 	Recipient Address `json:"recipient"`
 
-	Coupons []Code `json:"coupons,omitempty"`
+	Coupons []string `json:"coupons,omitempty"`
 
-	Positions Array `json:"positions"`
+	Positions []Position `json:"positions"`
 }
