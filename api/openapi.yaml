@@ -266,7 +266,6 @@ paths:
 
     post:
       tags:
-        - Carts
         - Orders
       summary: Create order from cart
       description: Create an order from this cart of the current user.
