@@ -24,12 +24,12 @@ type OrdersApiController struct {
 
 // NewOrdersApiController creates a default api controller
 func NewOrdersApiController(s OrdersApiServicer) Router {
-	return &OrdersApiController{ service: s }
+	return &OrdersApiController{service: s}
 }
 
 // Routes returns all of the api route for the OrdersApiController
 func (c *OrdersApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"CreateOrderFromCart",
 			strings.ToUpper("Post"),
@@ -46,7 +46,7 @@ func (c *OrdersApiController) Routes() Routes {
 }
 
 // CreateOrderFromCart - Create order from cart
-func (c *OrdersApiController) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) { 
+func (c *OrdersApiController) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	cartId := params["cartId"]
 	order := &Order{}
@@ -54,18 +54,18 @@ func (c *OrdersApiController) CreateOrderFromCart(w http.ResponseWriter, r *http
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	result, err := c.service.CreateOrderFromCart(cartId, *order)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }
 
 // PlaceOrder - Place order
-func (c *OrdersApiController) PlaceOrder(w http.ResponseWriter, r *http.Request) { 
+func (c *OrdersApiController) PlaceOrder(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	orderId := params["orderId"]
 	result, err := c.service.PlaceOrder(orderId)
@@ -73,6 +73,6 @@ func (c *OrdersApiController) PlaceOrder(w http.ResponseWriter, r *http.Request)
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }

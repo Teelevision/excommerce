@@ -24,12 +24,12 @@ type ProductsApiController struct {
 
 // NewProductsApiController creates a default api controller
 func NewProductsApiController(s ProductsApiServicer) Router {
-	return &ProductsApiController{ service: s }
+	return &ProductsApiController{service: s}
 }
 
 // Routes returns all of the api route for the ProductsApiController
 func (c *ProductsApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"GetAllProducts",
 			strings.ToUpper("Get"),
@@ -46,18 +46,18 @@ func (c *ProductsApiController) Routes() Routes {
 }
 
 // GetAllProducts - Get all products
-func (c *ProductsApiController) GetAllProducts(w http.ResponseWriter, r *http.Request) { 
+func (c *ProductsApiController) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	result, err := c.service.GetAllProducts()
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }
 
 // StoreCouponForProduct - Create product coupon
-func (c *ProductsApiController) StoreCouponForProduct(w http.ResponseWriter, r *http.Request) { 
+func (c *ProductsApiController) StoreCouponForProduct(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	productId := params["productId"]
 	couponCode := params["couponCode"]
@@ -66,12 +66,12 @@ func (c *ProductsApiController) StoreCouponForProduct(w http.ResponseWriter, r *
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	result, err := c.service.StoreCouponForProduct(productId, couponCode, *coupon)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }

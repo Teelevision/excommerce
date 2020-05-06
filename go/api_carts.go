@@ -24,12 +24,12 @@ type CartsApiController struct {
 
 // NewCartsApiController creates a default api controller
 func NewCartsApiController(s CartsApiServicer) Router {
-	return &CartsApiController{ service: s }
+	return &CartsApiController{service: s}
 }
 
 // Routes returns all of the api route for the CartsApiController
 func (c *CartsApiController) Routes() Routes {
-	return Routes{ 
+	return Routes{
 		{
 			"DeleteCart",
 			strings.ToUpper("Delete"),
@@ -58,7 +58,7 @@ func (c *CartsApiController) Routes() Routes {
 }
 
 // DeleteCart - Delete a cart
-func (c *CartsApiController) DeleteCart(w http.ResponseWriter, r *http.Request) { 
+func (c *CartsApiController) DeleteCart(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	cartId := params["cartId"]
 	result, err := c.service.DeleteCart(cartId)
@@ -66,12 +66,12 @@ func (c *CartsApiController) DeleteCart(w http.ResponseWriter, r *http.Request) 
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }
 
 // GetAllCarts - Get all carts
-func (c *CartsApiController) GetAllCarts(w http.ResponseWriter, r *http.Request) { 
+func (c *CartsApiController) GetAllCarts(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	locked := query.Get("locked")
 	result, err := c.service.GetAllCarts(locked)
@@ -79,12 +79,12 @@ func (c *CartsApiController) GetAllCarts(w http.ResponseWriter, r *http.Request)
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }
 
 // GetCart - Get a cart
-func (c *CartsApiController) GetCart(w http.ResponseWriter, r *http.Request) { 
+func (c *CartsApiController) GetCart(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	cartId := params["cartId"]
 	result, err := c.service.GetCart(cartId)
@@ -92,12 +92,12 @@ func (c *CartsApiController) GetCart(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }
 
 // StoreCart - Store a cart
-func (c *CartsApiController) StoreCart(w http.ResponseWriter, r *http.Request) { 
+func (c *CartsApiController) StoreCart(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	cartId := params["cartId"]
 	cart := &Cart{}
@@ -105,12 +105,12 @@ func (c *CartsApiController) StoreCart(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	result, err := c.service.StoreCart(cartId, *cart)
 	if err != nil {
 		w.WriteHeader(500)
 		return
 	}
-	
+
 	EncodeJSONResponse(result, nil, w)
 }

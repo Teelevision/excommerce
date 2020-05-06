@@ -14,7 +14,7 @@ import (
 )
 
 // CartsApiService is a service that implents the logic for the CartsApiServicer
-// This service should implement the business logic for every endpoint for the CartsApi API. 
+// This service should implement the business logic for every endpoint for the CartsApi API.
 // Include any external packages or services that will be required by this service.
 type CartsApiService struct {
 }

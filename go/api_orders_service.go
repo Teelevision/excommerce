@@ -14,7 +14,7 @@ import (
 )
 
 // OrdersApiService is a service that implents the logic for the OrdersApiServicer
-// This service should implement the business logic for every endpoint for the OrdersApi API. 
+// This service should implement the business logic for every endpoint for the OrdersApi API.
 // Include any external packages or services that will be required by this service.
 type OrdersApiService struct {
 }

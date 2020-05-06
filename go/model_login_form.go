@@ -11,7 +11,6 @@ package openapi
 
 // LoginForm - Login form
 type LoginForm struct {
-
 	Name Name `json:"name"`
 
 	Password string `json:"password"`
