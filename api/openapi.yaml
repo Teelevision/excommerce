@@ -12,6 +12,7 @@ paths:
   /users:
 
     post:
+      operationId: register
       tags:
         - Users
       summary: Register a user
@@ -44,6 +45,7 @@ paths:
   /users/login:
 
     post:
+      operationId: login
       tags:
         - Users
       summary: Login a user
@@ -70,6 +72,7 @@ paths:
   /products:
 
     get:
+      operationId: getAllProducts
       tags:
         - Products
       summary: Get all products
@@ -92,6 +95,7 @@ paths:
       - $ref: '#/components/parameters/couponCode'
 
     put:
+      operationId: storeCouponForProduct
       tags:
         - Products
       summary: Create product coupon
@@ -133,6 +137,7 @@ paths:
   /carts:
 
     get:
+      operationId: getAllCarts
       tags:
         - Carts
       summary: Get all carts
@@ -167,6 +172,7 @@ paths:
       - $ref: '#/components/parameters/cartId'
 
     get:
+      operationId: getCart
       tags:
         - Carts
       summary: Get a cart
@@ -190,6 +196,7 @@ paths:
           $ref: "#/components/responses/5XX"
 
     put:
+      operationId: storeCart
       tags:
         - Carts
       summary: Store a cart
@@ -238,6 +245,7 @@ paths:
           $ref: "#/components/responses/5XX"
 
     delete:
+      operationId: deleteCart
       tags:
         - Carts
       summary: Delete a cart
@@ -262,6 +270,7 @@ paths:
       - $ref: '#/components/parameters/cartId'
 
     post:
+      operationId: createOrderFromCart
       tags:
         - Orders
       summary: Create order from cart
@@ -306,6 +315,7 @@ paths:
       - $ref: '#/components/parameters/orderId'
 
     post:
+      operationId: placeOrder
       tags:
         - Orders
       summary: Place order
