@@ -13,7 +13,7 @@ package openapi
 type Product struct {
 
 	// The UUID of the product. If a product has no id it is a virtual product, like a discount, and only for displaying purposes.
-	Id string `json:"id,omitempty"`
+	ID string `json:"id,omitempty"`
 
 	// The display name of the product.
 	Name string `json:"name"`

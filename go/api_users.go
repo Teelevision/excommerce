@@ -15,18 +15,18 @@ import (
 	"strings"
 )
 
-// A UsersApiController binds http requests to an api service and writes the service results to the http response
-type UsersApiController struct {
-	service UsersApiServicer
+// A UsersAPIController binds http requests to an api service and writes the service results to the http response
+type UsersAPIController struct {
+	service UsersAPIServicer
 }
 
-// NewUsersApiController creates a default api controller
-func NewUsersApiController(s UsersApiServicer) Router {
-	return &UsersApiController{service: s}
+// NewUsersAPIController creates a default api controller
+func NewUsersAPIController(s UsersAPIServicer) Router {
+	return &UsersAPIController{service: s}
 }
 
 // Routes returns all of the api route for the UsersApiController
-func (c *UsersApiController) Routes() Routes {
+func (c *UsersAPIController) Routes() Routes {
 	return Routes{
 		{
 			"Login",
@@ -44,7 +44,7 @@ func (c *UsersApiController) Routes() Routes {
 }
 
 // Login - Login a user
-func (c *UsersApiController) Login(w http.ResponseWriter, r *http.Request) {
+func (c *UsersAPIController) Login(w http.ResponseWriter, r *http.Request) {
 	loginForm := &LoginForm{}
 	if err := json.NewDecoder(r.Body).Decode(&loginForm); err != nil {
 		w.WriteHeader(500)
@@ -61,7 +61,7 @@ func (c *UsersApiController) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Register - Register a user
-func (c *UsersApiController) Register(w http.ResponseWriter, r *http.Request) {
+func (c *UsersAPIController) Register(w http.ResponseWriter, r *http.Request) {
 	user := &User{}
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		w.WriteHeader(500)

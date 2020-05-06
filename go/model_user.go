@@ -13,7 +13,7 @@ package openapi
 type User struct {
 
 	// The UUID of the user.
-	Id string `json:"id"`
+	ID string `json:"id"`
 
 	// The unique name of the user.
 	Name string `json:"name"`

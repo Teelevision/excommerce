@@ -13,26 +13,26 @@ import (
 	"errors"
 )
 
-// OrdersApiService is a service that implents the logic for the OrdersApiServicer
+// OrdersAPIService is a service that implents the logic for the OrdersApiServicer
 // This service should implement the business logic for every endpoint for the OrdersApi API.
 // Include any external packages or services that will be required by this service.
-type OrdersApiService struct {
+type OrdersAPIService struct {
 }
 
-// NewOrdersApiService creates a default api service
-func NewOrdersApiService() OrdersApiServicer {
-	return &OrdersApiService{}
+// NewOrdersAPIService creates a default api service
+func NewOrdersAPIService() OrdersAPIServicer {
+	return &OrdersAPIService{}
 }
 
 // CreateOrderFromCart - Create order from cart
-func (s *OrdersApiService) CreateOrderFromCart(cartId string, order Order) (interface{}, error) {
+func (s *OrdersAPIService) CreateOrderFromCart(cartID string, order Order) (interface{}, error) {
 	// TODO - update CreateOrderFromCart with the required logic for this service method.
 	// Add api_orders_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 	return nil, errors.New("service method 'CreateOrderFromCart' not implemented")
 }
 
 // PlaceOrder - Place order
-func (s *OrdersApiService) PlaceOrder(orderId string) (interface{}, error) {
+func (s *OrdersAPIService) PlaceOrder(orderID string) (interface{}, error) {
 	// TODO - update PlaceOrder with the required logic for this service method.
 	// Add api_orders_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 	return nil, errors.New("service method 'PlaceOrder' not implemented")

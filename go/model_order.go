@@ -13,7 +13,7 @@ package openapi
 type Order struct {
 
 	// The UUID of the order.
-	Id string `json:"id"`
+	ID string `json:"id"`
 
 	// The status of the order.
 	Status string `json:"status"`

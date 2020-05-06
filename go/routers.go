@@ -11,11 +11,12 @@ package openapi
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 // A Route defines the parameters for an api endpoint
@@ -41,7 +42,7 @@ func NewRouter(routers ...Router) *mux.Router {
 		for _, route := range api.Routes() {
 			var handler http.Handler
 			handler = route.HandlerFunc
-			handler = Logger(handler, route.Name)
+			handler = logger(handler, route.Name)
 
 			router.
 				Methods(route.Method).

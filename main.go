@@ -19,19 +19,19 @@ import (
 func main() {
 	log.Printf("Server started")
 
-	CartsApiService := openapi.NewCartsApiService()
-	CartsApiController := openapi.NewCartsApiController(CartsApiService)
+	CartsAPIService := openapi.NewCartsAPIService()
+	CartsAPIController := openapi.NewCartsAPIController(CartsAPIService)
 
-	OrdersApiService := openapi.NewOrdersApiService()
-	OrdersApiController := openapi.NewOrdersApiController(OrdersApiService)
+	OrdersAPIService := openapi.NewOrdersAPIService()
+	OrdersAPIController := openapi.NewOrdersAPIController(OrdersAPIService)
 
-	ProductsApiService := openapi.NewProductsApiService()
-	ProductsApiController := openapi.NewProductsApiController(ProductsApiService)
+	ProductsAPIService := openapi.NewProductsAPIService()
+	ProductsAPIController := openapi.NewProductsAPIController(ProductsAPIService)
 
-	UsersApiService := openapi.NewUsersApiService()
-	UsersApiController := openapi.NewUsersApiController(UsersApiService)
+	UsersAPIService := openapi.NewUsersAPIService()
+	UsersAPIController := openapi.NewUsersAPIController(UsersAPIService)
 
-	router := openapi.NewRouter(CartsApiController, OrdersApiController, ProductsApiController, UsersApiController)
+	router := openapi.NewRouter(CartsAPIController, OrdersAPIController, ProductsAPIController, UsersAPIController)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

@@ -17,18 +17,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// A OrdersApiController binds http requests to an api service and writes the service results to the http response
-type OrdersApiController struct {
-	service OrdersApiServicer
+// A OrdersAPIController binds http requests to an api service and writes the service results to the http response
+type OrdersAPIController struct {
+	service OrdersAPIServicer
 }
 
-// NewOrdersApiController creates a default api controller
-func NewOrdersApiController(s OrdersApiServicer) Router {
-	return &OrdersApiController{service: s}
+// NewOrdersAPIController creates a default api controller
+func NewOrdersAPIController(s OrdersAPIServicer) Router {
+	return &OrdersAPIController{service: s}
 }
 
 // Routes returns all of the api route for the OrdersApiController
-func (c *OrdersApiController) Routes() Routes {
+func (c *OrdersAPIController) Routes() Routes {
 	return Routes{
 		{
 			"CreateOrderFromCart",
@@ -46,16 +46,16 @@ func (c *OrdersApiController) Routes() Routes {
 }
 
 // CreateOrderFromCart - Create order from cart
-func (c *OrdersApiController) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) {
+func (c *OrdersAPIController) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	cartId := params["cartId"]
+	cartID := params["cartId"]
 	order := &Order{}
 	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
 		w.WriteHeader(500)
 		return
 	}
 
-	result, err := c.service.CreateOrderFromCart(cartId, *order)
+	result, err := c.service.CreateOrderFromCart(cartID, *order)
 	if err != nil {
 		w.WriteHeader(500)
 		return
@@ -65,10 +65,10 @@ func (c *OrdersApiController) CreateOrderFromCart(w http.ResponseWriter, r *http
 }
 
 // PlaceOrder - Place order
-func (c *OrdersApiController) PlaceOrder(w http.ResponseWriter, r *http.Request) {
+func (c *OrdersAPIController) PlaceOrder(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	orderId := params["orderId"]
-	result, err := c.service.PlaceOrder(orderId)
+	orderID := params["orderId"]
+	result, err := c.service.PlaceOrder(orderID)
 	if err != nil {
 		w.WriteHeader(500)
 		return

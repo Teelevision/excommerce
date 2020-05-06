@@ -13,7 +13,7 @@ package openapi
 type Cart struct {
 
 	// The UUID of the cart.
-	Id string `json:"id"`
+	ID string `json:"id"`
 
 	Positions []Position `json:"positions"`
 

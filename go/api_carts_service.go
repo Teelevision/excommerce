@@ -13,40 +13,40 @@ import (
 	"errors"
 )
 
-// CartsApiService is a service that implents the logic for the CartsApiServicer
+// CartsAPIService is a service that implents the logic for the CartsApiServicer
 // This service should implement the business logic for every endpoint for the CartsApi API.
 // Include any external packages or services that will be required by this service.
-type CartsApiService struct {
+type CartsAPIService struct {
 }
 
-// NewCartsApiService creates a default api service
-func NewCartsApiService() CartsApiServicer {
-	return &CartsApiService{}
+// NewCartsAPIService creates a default api service
+func NewCartsAPIService() CartsAPIServicer {
+	return &CartsAPIService{}
 }
 
 // DeleteCart - Delete a cart
-func (s *CartsApiService) DeleteCart(cartId string) (interface{}, error) {
+func (s *CartsAPIService) DeleteCart(cartID string) (interface{}, error) {
 	// TODO - update DeleteCart with the required logic for this service method.
 	// Add api_carts_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 	return nil, errors.New("service method 'DeleteCart' not implemented")
 }
 
 // GetAllCarts - Get all carts
-func (s *CartsApiService) GetAllCarts(locked bool) (interface{}, error) {
+func (s *CartsAPIService) GetAllCarts(locked bool) (interface{}, error) {
 	// TODO - update GetAllCarts with the required logic for this service method.
 	// Add api_carts_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 	return nil, errors.New("service method 'GetAllCarts' not implemented")
 }
 
 // GetCart - Get a cart
-func (s *CartsApiService) GetCart(cartId string) (interface{}, error) {
+func (s *CartsAPIService) GetCart(cartID string) (interface{}, error) {
 	// TODO - update GetCart with the required logic for this service method.
 	// Add api_carts_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 	return nil, errors.New("service method 'GetCart' not implemented")
 }
 
 // StoreCart - Store a cart
-func (s *CartsApiService) StoreCart(cartId string, cart Cart) (interface{}, error) {
+func (s *CartsAPIService) StoreCart(cartID string, cart Cart) (interface{}, error) {
 	// TODO - update StoreCart with the required logic for this service method.
 	// Add api_carts_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 	return nil, errors.New("service method 'StoreCart' not implemented")

@@ -13,26 +13,26 @@ import (
 	"errors"
 )
 
-// UsersApiService is a service that implents the logic for the UsersApiServicer
+// UsersAPIService is a service that implents the logic for the UsersApiServicer
 // This service should implement the business logic for every endpoint for the UsersApi API.
 // Include any external packages or services that will be required by this service.
-type UsersApiService struct {
+type UsersAPIService struct {
 }
 
-// NewUsersApiService creates a default api service
-func NewUsersApiService() UsersApiServicer {
-	return &UsersApiService{}
+// NewUsersAPIService creates a default api service
+func NewUsersAPIService() UsersAPIServicer {
+	return &UsersAPIService{}
 }
 
 // Login - Login a user
-func (s *UsersApiService) Login(loginForm LoginForm) (interface{}, error) {
+func (s *UsersAPIService) Login(loginForm LoginForm) (interface{}, error) {
 	// TODO - update Login with the required logic for this service method.
 	// Add api_users_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 	return nil, errors.New("service method 'Login' not implemented")
 }
 
 // Register - Register a user
-func (s *UsersApiService) Register(user User) (interface{}, error) {
+func (s *UsersAPIService) Register(user User) (interface{}, error) {
 	// TODO - update Register with the required logic for this service method.
 	// Add api_users_service.go to the .openapi-generator-ignore to avoid overwriting this service implementation when updating open api generation.
 	return nil, errors.New("service method 'Register' not implemented")

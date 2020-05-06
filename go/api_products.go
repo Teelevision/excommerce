@@ -17,18 +17,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// A ProductsApiController binds http requests to an api service and writes the service results to the http response
-type ProductsApiController struct {
-	service ProductsApiServicer
+// A ProductsAPIController binds http requests to an api service and writes the service results to the http response
+type ProductsAPIController struct {
+	service ProductsAPIServicer
 }
 
-// NewProductsApiController creates a default api controller
-func NewProductsApiController(s ProductsApiServicer) Router {
-	return &ProductsApiController{service: s}
+// NewProductsAPIController creates a default api controller
+func NewProductsAPIController(s ProductsAPIServicer) Router {
+	return &ProductsAPIController{service: s}
 }
 
 // Routes returns all of the api route for the ProductsApiController
-func (c *ProductsApiController) Routes() Routes {
+func (c *ProductsAPIController) Routes() Routes {
 	return Routes{
 		{
 			"GetAllProducts",
@@ -46,7 +46,7 @@ func (c *ProductsApiController) Routes() Routes {
 }
 
 // GetAllProducts - Get all products
-func (c *ProductsApiController) GetAllProducts(w http.ResponseWriter, r *http.Request) {
+func (c *ProductsAPIController) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	result, err := c.service.GetAllProducts()
 	if err != nil {
 		w.WriteHeader(500)
@@ -57,9 +57,9 @@ func (c *ProductsApiController) GetAllProducts(w http.ResponseWriter, r *http.Re
 }
 
 // StoreCouponForProduct - Create product coupon
-func (c *ProductsApiController) StoreCouponForProduct(w http.ResponseWriter, r *http.Request) {
+func (c *ProductsAPIController) StoreCouponForProduct(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	productId := params["productId"]
+	productID := params["productId"]
 	couponCode := params["couponCode"]
 	coupon := &Coupon{}
 	if err := json.NewDecoder(r.Body).Decode(&coupon); err != nil {
@@ -67,7 +67,7 @@ func (c *ProductsApiController) StoreCouponForProduct(w http.ResponseWriter, r *
 		return
 	}
 
-	result, err := c.service.StoreCouponForProduct(productId, couponCode, *coupon)
+	result, err := c.service.StoreCouponForProduct(productID, couponCode, *coupon)
 	if err != nil {
 		w.WriteHeader(500)
 		return
