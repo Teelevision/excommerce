@@ -1,10 +1,10 @@
 FROM golang:1.14 AS build
 WORKDIR /go/src
 COPY go ./go
-COPY main.go .
+COPY vendor ./vendor
+COPY main.go go.mod go.sum ./
 
 ENV CGO_ENABLED=0
-RUN go get -d -v ./...
 
 RUN go build -a -installsuffix cgo -o openapi .
 
