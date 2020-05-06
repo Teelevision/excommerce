@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
-  title: EXCommerce
-  description: EXCommerce is an example commerce system.
+  title: ExCommerce
+  description: ExCommerce is an example commerce system.
   version: beta
 
 servers:

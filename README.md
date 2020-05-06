@@ -1,4 +1,4 @@
-# EXCommerce
+# ExCommerce
 
 Example Commerce System
 
