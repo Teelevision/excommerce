@@ -28,16 +28,10 @@ func main() {
 	createUserController := controller.CreateUser{UserRepository: repo}
 	getUserController := controller.GetUser{UserRepository: repo}
 
-	// api
-	CartsAPIService := openapi.NewCartsAPIService()
-	cartsAPI := openapi.NewCartsAPI(CartsAPIService)
-
-	OrdersAPIService := openapi.NewOrdersAPIService()
-	ordersAPI := openapi.NewOrdersAPI(OrdersAPIService)
-
-	ProductsAPIService := openapi.NewProductsAPIService()
-	productsAPI := openapi.NewProductsAPI(ProductsAPIService)
-
+	// apis
+	cartsAPI := &openapi.CartsAPI{}
+	ordersAPI := &openapi.OrdersAPI{}
+	productsAPI := &openapi.ProductsAPI{}
 	usersAPI := &openapi.UsersAPI{
 		CreateUserController: &createUserController,
 		GetUserController:    &getUserController,

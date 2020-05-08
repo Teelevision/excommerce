@@ -19,6 +19,8 @@ import (
 	"github.com/Teelevision/excommerce/controller"
 )
 
+var _ Router = (*UsersAPI)(nil)
+
 // A UsersAPIController binds http requests to an api service and writes the service results to the http response
 type UsersAPI struct {
 	CreateUserController *controller.CreateUser

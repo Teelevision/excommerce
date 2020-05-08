@@ -17,14 +17,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var _ Router = (*ProductsAPI)(nil)
+
 // A ProductsAPI binds http requests to an api service and writes the service results to the http response
 type ProductsAPI struct {
 	service ProductsAPIServicer
-}
-
-// NewProductsAPI creates a default api controller
-func NewProductsAPI(s ProductsAPIServicer) Router {
-	return &ProductsAPI{service: s}
 }
 
 // Routes returns all of the api route for the ProductsApiController

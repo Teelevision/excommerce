@@ -17,14 +17,11 @@ import (
 	"github.com/gorilla/mux"
 )
 
+var _ Router = (*CartsAPI)(nil)
+
 // A CartsAPI binds http requests to an api service and writes the service results to the http response
 type CartsAPI struct {
 	service CartsAPIServicer
-}
-
-// NewCartsAPI creates a default api controller
-func NewCartsAPI(s CartsAPIServicer) Router {
-	return &CartsAPI{service: s}
 }
 
 // Routes returns all of the api route for the CartsApiController
