@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/Teelevision/excommerce/controller"
 	"github.com/gorilla/mux"
 )
 
@@ -22,6 +23,8 @@ var _ Router = (*ProductsAPI)(nil)
 // A ProductsAPI binds http requests to an api service and writes the service results to the http response
 type ProductsAPI struct {
 	service ProductsAPIServicer
+
+	GetProductController *controller.GetProduct
 }
 
 // Routes returns all of the api route for the ProductsApiController
@@ -44,13 +47,19 @@ func (c *ProductsAPI) Routes() Routes {
 
 // GetAllProducts - Get all products
 func (c *ProductsAPI) GetAllProducts(w http.ResponseWriter, r *http.Request) {
-	result, err := c.service.GetAllProducts()
-	if err != nil {
-		w.WriteHeader(500)
-		return
+	products, err := c.GetProductController.All(r.Context())
+	switch {
+	case err == nil:
+		result := make([]Product, len(products))
+		for i, product := range products {
+			result[i].ID = product.ID
+			result[i].Name = product.Name
+			result[i].Price = float32(product.Price) / 100
+		}
+		EncodeJSONResponse(result, nil, w)
+	default:
+		panic(err)
 	}
-
-	EncodeJSONResponse(result, nil, w)
 }
 
 // StoreCouponForProduct - Create product coupon

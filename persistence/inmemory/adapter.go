@@ -15,8 +15,9 @@ import (
 type Adapter struct {
 	mx sync.Mutex
 
-	usersByID   map[string]*user
-	usersByName map[string]*user
+	usersByID    map[string]*user
+	usersByName  map[string]*user
+	productsByID map[string]*product
 
 	bcryptCost int
 }
@@ -36,8 +37,9 @@ func FastLessSecureHashingForTesting() Option {
 // NewAdapter returns a new in-memory adapter.
 func NewAdapter(options ...Option) *Adapter {
 	a := Adapter{
-		usersByID:   make(map[string]*user),
-		usersByName: make(map[string]*user),
+		usersByID:    make(map[string]*user),
+		usersByName:  make(map[string]*user),
+		productsByID: make(map[string]*product),
 	}
 	for _, option := range options {
 		option(&a)
@@ -45,7 +47,6 @@ func NewAdapter(options ...Option) *Adapter {
 	return &a
 }
 
-// The repositories that the in-memory adapter implements.
 var _ persistence.UserRepository = (*Adapter)(nil)
 
 type user struct {
@@ -124,4 +125,44 @@ func checkUserPassword(user *user, password string) (*model.User, error) {
 		ID:   user.id,
 		Name: user.name,
 	}, nil
+}
+
+var _ persistence.ProductRepository = (*Adapter)(nil)
+
+type product struct {
+	name  string
+	price int // in cents
+}
+
+// CreateProduct creates a product with the given id, name and price. Id must be
+// unique. ErrConflict is returned otherwise. The price is in cents.
+func (a *Adapter) CreateProduct(_ context.Context, id, name string, price int) error {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	if _, ok := a.productsByID[id]; ok {
+		return persistence.ErrConflict
+	}
+
+	a.productsByID[id] = &product{
+		name:  name,
+		price: price,
+	}
+	return nil
+}
+
+// FindAllProducts returns all stored products.
+func (a *Adapter) FindAllProducts(_ context.Context) ([]*model.Product, error) {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	result := make([]*model.Product, 0, len(a.productsByID))
+	for id, product := range a.productsByID {
+		result = append(result, &model.Product{
+			ID:    id,
+			Name:  product.name,
+			Price: product.price,
+		})
+	}
+	return result, nil
 }

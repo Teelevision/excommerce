@@ -23,3 +23,12 @@ type UserRepository interface {
 	// user matches the set of id and password.
 	FindUserByIDAndPassword(ctx context.Context, id, password string) (*model.User, error)
 }
+
+// ProductRepository stores and loads products. It is safe for concurrent use.
+type ProductRepository interface {
+	// CreateProduct creates a product with the given id, name and price. Id
+	// must be unique. ErrConflict is returned otherwise. The price is in cents.
+	CreateProduct(ctx context.Context, id, name string, price int) error
+	// FindAllProducts returns all stored products.
+	FindAllProducts(context.Context) ([]*model.Product, error)
+}
