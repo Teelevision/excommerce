@@ -17,18 +17,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// A ProductsAPIController binds http requests to an api service and writes the service results to the http response
-type ProductsAPIController struct {
+// A ProductsAPI binds http requests to an api service and writes the service results to the http response
+type ProductsAPI struct {
 	service ProductsAPIServicer
 }
 
-// NewProductsAPIController creates a default api controller
-func NewProductsAPIController(s ProductsAPIServicer) Router {
-	return &ProductsAPIController{service: s}
+// NewProductsAPI creates a default api controller
+func NewProductsAPI(s ProductsAPIServicer) Router {
+	return &ProductsAPI{service: s}
 }
 
 // Routes returns all of the api route for the ProductsApiController
-func (c *ProductsAPIController) Routes() Routes {
+func (c *ProductsAPI) Routes() Routes {
 	return Routes{
 		{
 			"GetAllProducts",
@@ -46,7 +46,7 @@ func (c *ProductsAPIController) Routes() Routes {
 }
 
 // GetAllProducts - Get all products
-func (c *ProductsAPIController) GetAllProducts(w http.ResponseWriter, r *http.Request) {
+func (c *ProductsAPI) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	result, err := c.service.GetAllProducts()
 	if err != nil {
 		w.WriteHeader(500)
@@ -57,7 +57,7 @@ func (c *ProductsAPIController) GetAllProducts(w http.ResponseWriter, r *http.Re
 }
 
 // StoreCouponForProduct - Create product coupon
-func (c *ProductsAPIController) StoreCouponForProduct(w http.ResponseWriter, r *http.Request) {
+func (c *ProductsAPI) StoreCouponForProduct(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	productID := params["productId"]
 	couponCode := params["couponCode"]

@@ -21,27 +21,29 @@ import (
 func main() {
 	log.Printf("Server started")
 
+	// persistence
 	repo := inmemory.NewAdapter()
 
+	// controllers
+	createUserController := controller.CreateUser{UserRepository: repo}
+	getUserController := controller.GetUser{UserRepository: repo}
+
+	// api
 	CartsAPIService := openapi.NewCartsAPIService()
-	CartsAPIController := openapi.NewCartsAPIController(CartsAPIService)
+	cartsAPI := openapi.NewCartsAPI(CartsAPIService)
 
 	OrdersAPIService := openapi.NewOrdersAPIService()
-	OrdersAPIController := openapi.NewOrdersAPIController(OrdersAPIService)
+	ordersAPI := openapi.NewOrdersAPI(OrdersAPIService)
 
 	ProductsAPIService := openapi.NewProductsAPIService()
-	ProductsAPIController := openapi.NewProductsAPIController(ProductsAPIService)
+	productsAPI := openapi.NewProductsAPI(ProductsAPIService)
 
-	UsersAPIController := &openapi.UsersAPIController{
-		CreateUserController: &controller.CreateUser{
-			UserRepository: repo,
-		},
-		GetUserController: &controller.GetUser{
-			UserRepository: repo,
-		},
+	usersAPI := &openapi.UsersAPI{
+		CreateUserController: &createUserController,
+		GetUserController:    &getUserController,
 	}
 
-	router := openapi.NewRouter(CartsAPIController, OrdersAPIController, ProductsAPIController, UsersAPIController)
+	router := openapi.NewRouter(cartsAPI, ordersAPI, productsAPI, usersAPI)
 
 	log.Fatal(http.ListenAndServe(":8080", router))
 }

@@ -17,18 +17,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// A OrdersAPIController binds http requests to an api service and writes the service results to the http response
-type OrdersAPIController struct {
+// A OrdersAPI binds http requests to an api service and writes the service results to the http response
+type OrdersAPI struct {
 	service OrdersAPIServicer
 }
 
-// NewOrdersAPIController creates a default api controller
-func NewOrdersAPIController(s OrdersAPIServicer) Router {
-	return &OrdersAPIController{service: s}
+// NewOrdersAPI creates a default api controller
+func NewOrdersAPI(s OrdersAPIServicer) Router {
+	return &OrdersAPI{service: s}
 }
 
 // Routes returns all of the api route for the OrdersApiController
-func (c *OrdersAPIController) Routes() Routes {
+func (c *OrdersAPI) Routes() Routes {
 	return Routes{
 		{
 			"CreateOrderFromCart",
@@ -46,7 +46,7 @@ func (c *OrdersAPIController) Routes() Routes {
 }
 
 // CreateOrderFromCart - Create order from cart
-func (c *OrdersAPIController) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) {
+func (c *OrdersAPI) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	cartID := params["cartId"]
 	order := &Order{}
@@ -65,7 +65,7 @@ func (c *OrdersAPIController) CreateOrderFromCart(w http.ResponseWriter, r *http
 }
 
 // PlaceOrder - Place order
-func (c *OrdersAPIController) PlaceOrder(w http.ResponseWriter, r *http.Request) {
+func (c *OrdersAPI) PlaceOrder(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	orderID := params["orderId"]
 	result, err := c.service.PlaceOrder(orderID)

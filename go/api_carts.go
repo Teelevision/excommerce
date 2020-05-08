@@ -17,18 +17,18 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// A CartsAPIController binds http requests to an api service and writes the service results to the http response
-type CartsAPIController struct {
+// A CartsAPI binds http requests to an api service and writes the service results to the http response
+type CartsAPI struct {
 	service CartsAPIServicer
 }
 
-// NewCartsAPIController creates a default api controller
-func NewCartsAPIController(s CartsAPIServicer) Router {
-	return &CartsAPIController{service: s}
+// NewCartsAPI creates a default api controller
+func NewCartsAPI(s CartsAPIServicer) Router {
+	return &CartsAPI{service: s}
 }
 
 // Routes returns all of the api route for the CartsApiController
-func (c *CartsAPIController) Routes() Routes {
+func (c *CartsAPI) Routes() Routes {
 	return Routes{
 		{
 			"DeleteCart",
@@ -58,7 +58,7 @@ func (c *CartsAPIController) Routes() Routes {
 }
 
 // DeleteCart - Delete a cart
-func (c *CartsAPIController) DeleteCart(w http.ResponseWriter, r *http.Request) {
+func (c *CartsAPI) DeleteCart(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	cartID := params["cartId"]
 	result, err := c.service.DeleteCart(cartID)
@@ -71,7 +71,7 @@ func (c *CartsAPIController) DeleteCart(w http.ResponseWriter, r *http.Request) 
 }
 
 // GetAllCarts - Get all carts
-func (c *CartsAPIController) GetAllCarts(w http.ResponseWriter, r *http.Request) {
+func (c *CartsAPI) GetAllCarts(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	locked := query.Get("locked") == "true"
 	result, err := c.service.GetAllCarts(locked)
@@ -84,7 +84,7 @@ func (c *CartsAPIController) GetAllCarts(w http.ResponseWriter, r *http.Request)
 }
 
 // GetCart - Get a cart
-func (c *CartsAPIController) GetCart(w http.ResponseWriter, r *http.Request) {
+func (c *CartsAPI) GetCart(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	cartID := params["cartId"]
 	result, err := c.service.GetCart(cartID)
@@ -97,7 +97,7 @@ func (c *CartsAPIController) GetCart(w http.ResponseWriter, r *http.Request) {
 }
 
 // StoreCart - Store a cart
-func (c *CartsAPIController) StoreCart(w http.ResponseWriter, r *http.Request) {
+func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	cartID := params["cartId"]
 	cart := &Cart{}

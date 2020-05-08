@@ -20,13 +20,13 @@ import (
 )
 
 // A UsersAPIController binds http requests to an api service and writes the service results to the http response
-type UsersAPIController struct {
+type UsersAPI struct {
 	CreateUserController *controller.CreateUser
 	GetUserController    *controller.GetUser
 }
 
 // Routes returns all of the api route for the UsersApiController
-func (c *UsersAPIController) Routes() Routes {
+func (c *UsersAPI) Routes() Routes {
 	return Routes{
 		{
 			"Login",
@@ -44,7 +44,7 @@ func (c *UsersAPIController) Routes() Routes {
 }
 
 // Login - Login a user
-func (c *UsersAPIController) Login(w http.ResponseWriter, r *http.Request) {
+func (c *UsersAPI) Login(w http.ResponseWriter, r *http.Request) {
 	loginForm := &LoginForm{}
 	if err := json.NewDecoder(r.Body).Decode(&loginForm); err != nil {
 		invalidJSON(err, w)
@@ -67,7 +67,7 @@ func (c *UsersAPIController) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 // Register - Register a user
-func (c *UsersAPIController) Register(w http.ResponseWriter, r *http.Request) {
+func (c *UsersAPI) Register(w http.ResponseWriter, r *http.Request) {
 	user := &User{}
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
 		invalidJSON(err, w)
