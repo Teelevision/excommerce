@@ -22,7 +22,7 @@ paths:
             schema:
               $ref: "#/components/schemas/User"
       responses:
-        200:
+        201:
           description: User was created.
           content:
             application/json:
