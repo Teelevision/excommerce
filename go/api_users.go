@@ -11,13 +11,19 @@ package openapi
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
+	"unicode/utf8"
+
+	"github.com/Teelevision/excommerce/controller"
 )
 
 // A UsersAPIController binds http requests to an api service and writes the service results to the http response
 type UsersAPIController struct {
 	service UsersAPIServicer
+
+	CreateUserController *controller.CreateUser
 }
 
 // NewUsersAPIController creates a default api controller
@@ -64,15 +70,31 @@ func (c *UsersAPIController) Login(w http.ResponseWriter, r *http.Request) {
 func (c *UsersAPIController) Register(w http.ResponseWriter, r *http.Request) {
 	user := &User{}
 	if err := json.NewDecoder(r.Body).Decode(&user); err != nil {
-		w.WriteHeader(500)
+		invalidJSON(err, w)
 		return
 	}
 
-	result, err := c.service.Register(*user)
-	if err != nil {
-		w.WriteHeader(500)
+	// validation
+	if l := utf8.RuneCountInString(user.Name); l < 1 || l > 64 {
+		failValidation("The name must be 1 to 64 characters long.", "/name", w)
+		return
+	}
+	if l := utf8.RuneCountInString(user.Password); l < 8 || l > 64 {
+		failValidation("The password must be 8 to 64 characters long.", "/password", w)
 		return
 	}
 
-	EncodeJSONResponse(result, nil, w)
+	// action
+	u, err := c.CreateUserController.Do(r.Context(), user.Name, user.Password)
+	switch {
+	case errors.Is(err, controller.ErrConflict):
+		w.WriteHeader(http.StatusConflict) // 409
+	case err == nil:
+		EncodeJSONResponse(&User{
+			ID:   u.ID,
+			Name: u.Name,
+		}, nil, w)
+	default:
+		unexpectedError(err, w)
+	}
 }

@@ -19,5 +19,5 @@ type User struct {
 	Name string `json:"name"`
 
 	// The plain text password of the user.
-	Password string `json:"password"`
+	Password string `json:"password,omitempty"`
 }

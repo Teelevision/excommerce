@@ -55,6 +55,38 @@ func NewRouter(routers ...Router) *mux.Router {
 	return router
 }
 
+func invalidJSON(jsonErr error, w http.ResponseWriter) {
+	status := http.StatusBadRequest // 400
+	err := EncodeJSONResponse(map[string]string{
+		"message": "Invalid JSON in request body.",
+		"details": jsonErr.Error(),
+	}, &status, w)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func failValidation(message, pointer string, w http.ResponseWriter) {
+	status := http.StatusUnprocessableEntity // 422
+	err := EncodeJSONResponse(MalformedInputError{
+		Message: message,
+		Pointer: pointer,
+	}, &status, w)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func unexpectedError(_ error, w http.ResponseWriter) {
+	status := http.StatusInternalServerError // 500
+	err := EncodeJSONResponse(map[string]string{
+		"message": "Unexpected error.",
+	}, &status, w)
+	if err != nil {
+		panic(err)
+	}
+}
+
 // EncodeJSONResponse uses the json encoder to write an interface to the http response with an optional status code
 func EncodeJSONResponse(i interface{}, status *int, w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")

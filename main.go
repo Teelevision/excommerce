@@ -13,11 +13,15 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Teelevision/excommerce/controller"
 	openapi "github.com/Teelevision/excommerce/go"
+	"github.com/Teelevision/excommerce/persistence/inmemory"
 )
 
 func main() {
 	log.Printf("Server started")
+
+	repo := inmemory.NewAdapter()
 
 	CartsAPIService := openapi.NewCartsAPIService()
 	CartsAPIController := openapi.NewCartsAPIController(CartsAPIService)
@@ -28,8 +32,11 @@ func main() {
 	ProductsAPIService := openapi.NewProductsAPIService()
 	ProductsAPIController := openapi.NewProductsAPIController(ProductsAPIService)
 
-	UsersAPIService := openapi.NewUsersAPIService()
-	UsersAPIController := openapi.NewUsersAPIController(UsersAPIService)
+	UsersAPIController := &openapi.UsersAPIController{
+		CreateUserController: &controller.CreateUser{
+			UserRepository: repo,
+		},
+	}
 
 	router := openapi.NewRouter(CartsAPIController, OrdersAPIController, ProductsAPIController, UsersAPIController)
 
