@@ -28,6 +28,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+        400:
+          $ref: "#/components/responses/400"
         409:
           description: Name already taken.
         422:
@@ -64,6 +66,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/User"
+        400:
+          $ref: "#/components/responses/400"
         404:
           description: User does not exist or password is incorrect.
         5XX:
@@ -116,6 +120,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Coupon"
+        400:
+          $ref: "#/components/responses/400"
         401:
           description: You are not authenticated.
         403:
@@ -223,6 +229,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Cart"
+        400:
+          $ref: "#/components/responses/400"
         401:
           description: You are not authenticated.
         403:
@@ -287,6 +295,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Order"
+        400:
+          $ref: "#/components/responses/400"
         401:
           description: You are not authenticated.
         403:
@@ -418,11 +428,31 @@ components:
 
   responses:
 
+    400:
+      description: Bad request.
+      content:
+        application/json:
+          schema:
+            required:
+              - message
+              - details
+            properties:
+              message:
+                type: string
+                description: A human-readable message about what went wrong.
+                example: Invalid JSON in request body.
+              details:
+                type: string
+                description: Details about what went wrong intended for
+                  developers.
+                example: invalid character ':' after top-level value
     5XX:
       description: Unexpected error.
       content:
         application/json:
           schema:
+            required:
+              - message
             properties:
               message:
                 type: string
