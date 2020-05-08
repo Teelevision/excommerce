@@ -1,4 +1,10 @@
-.PHONY: openapi redoc build
+.PHONY: build run openapi redoc
+
+build:
+	docker build -t excommerce .
+
+run:
+	docker run --rm -it -p 127.0.0.1:8080:8080/tcp excommerce:latest
 
 openapi: api/openapi.yaml
 	docker run --rm -v ${PWD}:/local \
@@ -14,6 +20,3 @@ redoc:
 		-v ${PWD}/api/openapi.yaml:/usr/share/nginx/html/openapi.yaml:ro \
 		-e SPEC_URL=openapi.yaml \
 		redocly/redoc
-
-build:
-	docker build -t excommerce .

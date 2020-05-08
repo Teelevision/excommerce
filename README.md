@@ -9,6 +9,8 @@ Example Commerce System
 
 ## API
 
+* Build the server: `make build`
+* Start the server build on `localhost:8080`: `make run`
 * Start api doc server on [localhost:8081](http://localhost:8081/): `make redoc`
 
 ## Design

@@ -1,8 +1,6 @@
 FROM golang:1.14 AS build
 WORKDIR /go/src
-COPY go ./go
-COPY vendor ./vendor
-COPY main.go go.mod go.sum ./
+COPY . .
 
 ENV CGO_ENABLED=0
 
