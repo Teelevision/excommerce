@@ -9,7 +9,7 @@
 			"name": "Users",
 			"item": [
 				{
-					"name": "register",
+					"name": "Register a user",
 					"event": [
 						{
 							"listen": "test",
@@ -52,6 +52,56 @@
 							],
 							"path": [
 								"users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login a user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "f368252a-2b24-49da-a0e4-8e5b091db5c9",
+								"exec": [
+									"switch (pm.response.code) {",
+									"    case 200:",
+									"        const resp = pm.response.json();",
+									"        const req = JSON.parse(pm.request.body.raw);",
+									"        pm.environment.set(\"user.id\", resp.id);",
+									"        pm.environment.set(\"user.name\", resp.name);",
+									"        pm.environment.set(\"user.password\", req.password);",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"{{user.name}}\",\n  \"password\": \"{{user.password}}\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{HOST}}/users/login",
+							"host": [
+								"{{HOST}}"
+							],
+							"path": [
+								"users",
+								"login"
 							]
 						}
 					},

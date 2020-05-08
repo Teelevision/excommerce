@@ -36,6 +36,9 @@ func main() {
 		CreateUserController: &controller.CreateUser{
 			UserRepository: repo,
 		},
+		GetUserController: &controller.GetUser{
+			UserRepository: repo,
+		},
 	}
 
 	router := openapi.NewRouter(CartsAPIController, OrdersAPIController, ProductsAPIController, UsersAPIController)

@@ -21,14 +21,8 @@ import (
 
 // A UsersAPIController binds http requests to an api service and writes the service results to the http response
 type UsersAPIController struct {
-	service UsersAPIServicer
-
 	CreateUserController *controller.CreateUser
-}
-
-// NewUsersAPIController creates a default api controller
-func NewUsersAPIController(s UsersAPIServicer) Router {
-	return &UsersAPIController{service: s}
+	GetUserController    *controller.GetUser
 }
 
 // Routes returns all of the api route for the UsersApiController
@@ -53,17 +47,23 @@ func (c *UsersAPIController) Routes() Routes {
 func (c *UsersAPIController) Login(w http.ResponseWriter, r *http.Request) {
 	loginForm := &LoginForm{}
 	if err := json.NewDecoder(r.Body).Decode(&loginForm); err != nil {
-		w.WriteHeader(500)
+		invalidJSON(err, w)
 		return
 	}
 
-	result, err := c.service.Login(*loginForm)
-	if err != nil {
-		w.WriteHeader(500)
-		return
+	// action
+	u, err := c.GetUserController.ByNameAndPassword(r.Context(), loginForm.Name, loginForm.Password)
+	switch {
+	case errors.Is(err, controller.ErrNotFound):
+		w.WriteHeader(http.StatusNotFound) // 404
+	case err == nil:
+		EncodeJSONResponse(&User{
+			ID:   u.ID,
+			Name: u.Name,
+		}, nil, w)
+	default:
+		unexpectedError(err, w)
 	}
-
-	EncodeJSONResponse(result, nil, w)
 }
 
 // Register - Register a user
