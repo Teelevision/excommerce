@@ -132,6 +132,80 @@ func (s *CartRepositoryTestSuite) TestCreateCart() {
 	})
 }
 
+// TestUpdateCartOfUser tests updating carts.
+func (s *CartRepositoryTestSuite) TestUpdateCartOfUser() {
+	s.Run("updates a cart", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx,
+			"user",
+			"id",
+			[]struct {
+				ProductID string
+				Quantity  int
+				Price     int
+			}{
+				{"bb364bf5-e1fb-445d-be2d-ebad49316e0c", 1, 999},
+				{"77181602-1b4c-463c-b9a5-c2188610fd68", 999, -1},
+			}, // products
+		)
+		s.Require().NoError(err)
+		err = r.UpdateCartOfUser(ctx,
+			"user",
+			"id",
+			[]struct {
+				ProductID string
+				Quantity  int
+				Price     int
+			}{
+				{"e11c7885-92a9-4833-8e52-ed020fef5aff", 2, 234},
+				{"ff62397c-cbcf-4cd9-b57d-0a9348dd8ef4", 3, 345},
+			}, // products
+		)
+		s.Require().NoError(err)
+	})
+	s.Run("user is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		err = r.UpdateCartOfUser(ctx, "USER", "id", nil)
+		s.True(errors.Is(err, persistence.ErrNotOwnedByUser))
+	})
+	s.Run("id is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		err = r.UpdateCartOfUser(ctx, "user", "ID", nil)
+		s.True(errors.Is(err, persistence.ErrNotFound))
+	})
+	s.Run("works concurrently", func() {
+		r := s.NewRepository()
+		var wg sync.WaitGroup
+		ids := []string{
+			"805099eb-27ba-4db8-a7fe-57b63e8afa84",
+			"0b2cd45b-879d-42b7-a35a-edbbe7a719f6",
+			"6f2b4ecb-56f3-49a3-a5ad-0e946ff26647",
+			"44b9ffee-8ad0-40ec-b3c1-ee8d04e0074e",
+			"9f879b83-6cfc-4a45-b4be-7cabd1ff17dc",
+			"e6cf7804-937c-4e77-9952-f15a5e3bdec5",
+		}
+		do := func(ids []string) {
+			defer wg.Done()
+			for _, id := range ids {
+				err := r.CreateCart(ctx, "user", id, nil)
+				s.Require().NoError(err)
+			}
+			for _, id := range ids {
+				err := r.UpdateCartOfUser(ctx, "user", id, nil)
+				s.Require().NoError(err)
+			}
+		}
+		wg.Add(2)
+		go do(ids[:3])
+		go do(ids[3:])
+		wg.Wait()
+	})
+}
+
 // TestFindAllUnlockedCartsOfUser tests finding all unlocked carts of a user.
 func (s *CartRepositoryTestSuite) TestFindAllUnlockedCartsOfUser() {
 	s.Run("finds cart with positions", func() {
@@ -165,6 +239,51 @@ func (s *CartRepositoryTestSuite) TestFindAllUnlockedCartsOfUser() {
 				Locked: false,
 			},
 		}, carts)
+		s.Run("after updating it", func() {
+			err := r.UpdateCartOfUser(ctx, "8a0f04c7-babb-4ae6-a003-03637cb4396a", "4a33699b-afc5-41e7-b22f-3cdfca5952f8", []struct {
+				ProductID string
+				Quantity  int
+				Price     int
+			}{
+				{"58a89337-e6e3-4ed8-b6b8-1999f79d48d5", 5, -100}, // new one
+				{"eb8013e1-74ec-4c20-b57f-19d7a47c8bb0", 1, 123},
+				// removed 80d96241-96de-486e-a9bd-5f31dfb59405
+			})
+			s.Require().NoError(err)
+			carts, err := r.FindAllUnlockedCartsOfUser(ctx, "8a0f04c7-babb-4ae6-a003-03637cb4396a")
+			s.NoError(err)
+			s.ElementsMatch([]model.Position{
+				{
+					ProductID: "58a89337-e6e3-4ed8-b6b8-1999f79d48d5",
+					Quantity:  5,
+					Price:     -100,
+				}, {
+					ProductID: "eb8013e1-74ec-4c20-b57f-19d7a47c8bb0",
+					Quantity:  1,
+					Price:     123,
+				},
+			}, carts[0].Positions)
+			carts[0].Positions = nil
+			s.Equal([]*model.Cart{
+				{
+					ID:     "4a33699b-afc5-41e7-b22f-3cdfca5952f8",
+					Locked: false,
+				},
+			}, carts)
+		})
+		s.Run("after removing all positions", func() {
+			err := r.UpdateCartOfUser(ctx, "8a0f04c7-babb-4ae6-a003-03637cb4396a", "4a33699b-afc5-41e7-b22f-3cdfca5952f8", nil)
+			s.Require().NoError(err)
+			carts, err := r.FindAllUnlockedCartsOfUser(ctx, "8a0f04c7-babb-4ae6-a003-03637cb4396a")
+			s.NoError(err)
+			s.Equal([]*model.Cart{
+				{
+					ID:        "4a33699b-afc5-41e7-b22f-3cdfca5952f8",
+					Positions: []model.Position{},
+					Locked:    false,
+				},
+			}, carts)
+		})
 	})
 	s.Run("finds many", func() {
 		r := s.NewRepository()

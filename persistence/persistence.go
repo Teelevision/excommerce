@@ -43,6 +43,15 @@ type CartRepository interface {
 		Quantity  int
 		Price     int // in cents
 	}) error
+	// UpdateCartOfUser updates a cart of the given user with new positions. Any
+	// existing positions are replaced. ErrNotFound is returned if the cart does
+	// not exist. ErrNotOwnedByUser is returned if the cart exists but it's not
+	// owned by the given user.
+	UpdateCartOfUser(ctx context.Context, userID, id string, positions []struct {
+		ProductID string
+		Quantity  int
+		Price     int // in cents
+	}) error
 	// FindAllUnlockedCartsOfUser returns all stored carts and their positions
 	// of the given user.
 	FindAllUnlockedCartsOfUser(ctx context.Context, userID string) ([]*model.Cart, error)

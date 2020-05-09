@@ -201,6 +201,31 @@ func (a *Adapter) CreateCart(_ context.Context, userID, id string, positions []s
 	return nil
 }
 
+// UpdateCartOfUser updates a cart of the given user with new positions. Any
+// existing positions are replaced. ErrNotFound is returned if the cart does not
+// exist. ErrNotOwnedByUser is returned if the cart exists but it's not owned by
+// the given user.
+func (a *Adapter) UpdateCartOfUser(ctx context.Context, userID, id string, positions []struct {
+	ProductID string
+	Quantity  int
+	Price     int // in cents
+}) error {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	cart, ok := a.cartsByID[id]
+	if !ok {
+		return persistence.ErrNotFound
+	}
+
+	if cart.userID != userID {
+		return persistence.ErrNotOwnedByUser
+	}
+
+	cart.positions = positions
+	return nil
+}
+
 // FindAllUnlockedCartsOfUser returns all stored carts and their positions of
 // the given user.
 func (a *Adapter) FindAllUnlockedCartsOfUser(_ context.Context, userID string) ([]*model.Cart, error) {
