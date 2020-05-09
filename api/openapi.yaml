@@ -168,6 +168,15 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Cart"
+        400:
+          description: Bad request.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/responses/400/content/application~1json/schema"
+              example:
+                message: The locked query parameter is invalid.
+                details: Only locked=false is supported.
         401:
           description: You are not authenticated.
         5XX:
