@@ -5,14 +5,14 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/Teelevision/excommerce/controller"
 	"github.com/Teelevision/excommerce/model"
+	"github.com/Teelevision/excommerce/persistence"
 )
 
 // Authenticator authenticates users. If used as a middleware it requires that
 // the request is authenticated.
 type Authenticator struct {
-	GetUserController *controller.GetUser
+	UserRepository persistence.UserRepository
 }
 
 type userCtxKey struct{}
@@ -45,9 +45,9 @@ func (a *Authenticator) Middleware(next http.Handler) http.Handler {
 
 		ctx := r.Context()
 
-		user, err := a.GetUserController.ByIDAndPassword(ctx, id, password)
+		user, err := a.UserRepository.FindUserByIDAndPassword(ctx, id, password)
 		switch {
-		case errors.Is(err, controller.ErrNotFound):
+		case errors.Is(err, persistence.ErrNotFound):
 			w.WriteHeader(http.StatusUnauthorized) // 401
 		case err == nil:
 			ctx = context.WithValue(ctx, userCtxKey{}, *user)

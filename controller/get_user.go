@@ -27,17 +27,3 @@ func (c *GetUser) ByNameAndPassword(ctx context.Context, name, password string) 
 		panic(err)
 	}
 }
-
-// ByIDAndPassword gets the user by id and password. ErrNotFound is returned if
-// there is no user with the id. On success the user is returned.
-func (c *GetUser) ByIDAndPassword(ctx context.Context, id, password string) (*model.User, error) {
-	user, err := c.UserRepository.FindUserByIDAndPassword(ctx, id, password)
-	switch {
-	case errors.Is(err, persistence.ErrNotFound):
-		return nil, fmt.Errorf("%w: %s", ErrNotFound, err)
-	case err == nil:
-		return user, nil
-	default:
-		panic(err)
-	}
-}
