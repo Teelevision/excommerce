@@ -9,7 +9,7 @@
 
 package openapi
 
-// Address - An address or a person, company or similar.
+// Address - An address of a person, company or similar.
 type Address struct {
 
 	// The name of the person, company or similar.

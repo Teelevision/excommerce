@@ -267,6 +267,8 @@ paths:
         - Carts
       summary: Delete a cart
       description: Delete a cart of the current user.
+      security:
+        - basicAuth: []
       responses:
         204:
           description: The cart was deleted.
@@ -292,6 +294,8 @@ paths:
         - Orders
       summary: Create order from cart
       description: Create an order from this cart of the current user.
+      security:
+        - basicAuth: []
       requestBody:
         content:
           application/json:
@@ -339,6 +343,8 @@ paths:
         - Orders
       summary: Place order
       description: Place an order of the current user.
+      security:
+        - basicAuth: []
       responses:
         200:
           description: The placed order.
@@ -649,7 +655,7 @@ components:
                   price: -12.03
         
     Address:
-      description: An address or a person, company or similar.
+      description: An address of a person, company or similar.
       required:
         - name
         - country
