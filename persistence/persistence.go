@@ -32,3 +32,18 @@ type ProductRepository interface {
 	// FindAllProducts returns all stored products.
 	FindAllProducts(context.Context) ([]*model.Product, error)
 }
+
+// CartRepository stores and loads carts and their positions. It is safe for
+// concurrent use.
+type CartRepository interface {
+	// CreateCart creates a cart for the given user with the given id and
+	// positions. Id must be unique. ErrConflict is returned otherwise.
+	CreateCart(ctx context.Context, userID, id string, positions []struct {
+		ProductID string // TODO: let's see how bad of an idea inlining this really is
+		Quantity  int
+		Price     int // in cents
+	}) error
+	// FindAllUnlockedCartsOfUser returns all stored carts and their positions
+	// of the given user.
+	FindAllUnlockedCartsOfUser(ctx context.Context, userID string) ([]*model.Cart, error)
+}

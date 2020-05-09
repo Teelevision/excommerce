@@ -18,6 +18,7 @@ type Adapter struct {
 	usersByID    map[string]*user
 	usersByName  map[string]*user
 	productsByID map[string]*product
+	cartsByID    map[string]*cart
 
 	bcryptCost int
 }
@@ -40,6 +41,7 @@ func NewAdapter(options ...Option) *Adapter {
 		usersByID:    make(map[string]*user),
 		usersByName:  make(map[string]*user),
 		productsByID: make(map[string]*product),
+		cartsByID:    make(map[string]*cart),
 	}
 	for _, option := range options {
 		option(&a)
@@ -163,6 +165,65 @@ func (a *Adapter) FindAllProducts(_ context.Context) ([]*model.Product, error) {
 			Name:  product.name,
 			Price: product.price,
 		})
+	}
+	return result, nil
+}
+
+var _ persistence.CartRepository = (*Adapter)(nil)
+
+type cart struct {
+	userID    string
+	positions []struct {
+		ProductID string
+		Quantity  int
+		Price     int // in cents
+	}
+}
+
+// CreateCart creates a cart for the given user with the given id and positions.
+// Id must be unique. ErrConflict is returned otherwise.
+func (a *Adapter) CreateCart(_ context.Context, userID, id string, positions []struct {
+	ProductID string
+	Quantity  int
+	Price     int // in cents
+}) error {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	if _, ok := a.cartsByID[id]; ok {
+		return persistence.ErrConflict
+	}
+
+	a.cartsByID[id] = &cart{
+		userID:    userID,
+		positions: positions,
+	}
+	return nil
+}
+
+// FindAllUnlockedCartsOfUser returns all stored carts and their positions of
+// the given user.
+func (a *Adapter) FindAllUnlockedCartsOfUser(_ context.Context, userID string) ([]*model.Cart, error) {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	result := make([]*model.Cart, 0)
+	for id, cart := range a.cartsByID {
+		if cart.userID != userID {
+			continue
+		}
+		r := &model.Cart{
+			ID:        id,
+			Positions: make([]model.Position, len(cart.positions)),
+		}
+		for i, position := range cart.positions {
+			r.Positions[i] = model.Position{
+				ProductID: position.ProductID,
+				Quantity:  position.Quantity,
+				Price:     position.Price,
+			}
+		}
+		result = append(result, r)
 	}
 	return result, nil
 }

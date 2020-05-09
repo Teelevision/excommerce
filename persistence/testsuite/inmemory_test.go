@@ -26,4 +26,12 @@ func TestReferenceImplementation(t *testing.T) {
 		}
 		suite.RunSuite(t)
 	}
+	{ // cart
+		suite := &testsuite.CartRepositoryTestSuite{
+			NewRepository: func() persistence.CartRepository {
+				return inmemory.NewAdapter()
+			},
+		}
+		suite.RunSuite(t)
+	}
 }

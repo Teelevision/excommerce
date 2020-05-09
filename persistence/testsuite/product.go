@@ -118,7 +118,7 @@ func (s *ProductRepositoryTestSuite) TestCreateProduct() {
 	})
 }
 
-// TestFindAllProducts tests finding a product by name and password.
+// TestFindAllProducts tests finding all products.
 func (s *ProductRepositoryTestSuite) TestFindAllProducts() {
 	s.Run("finds product", func() {
 		r := s.NewRepository()
