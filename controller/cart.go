@@ -14,9 +14,10 @@ type Cart struct {
 	CartRepository persistence.CartRepository
 }
 
-// Create creates the given cart. ErrConflict is returned if a cart with the
-// same id already exists.
-func (c *Cart) Create(ctx context.Context, cart *model.Cart) error {
+// CreateAndGet creates the given cart. ErrConflict is returned if a cart with
+// the same id already exists. The cart is returned with all prices already
+// calculated.
+func (c *Cart) CreateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart, error) {
 	err := c.CartRepository.CreateCart(ctx,
 		authentication.AuthenticatedUser(ctx).ID,
 		cart.ID,
@@ -24,18 +25,22 @@ func (c *Cart) Create(ctx context.Context, cart *model.Cart) error {
 	)
 	switch {
 	case errors.Is(err, persistence.ErrConflict):
-		return ErrConflict
+		return nil, ErrConflict
 	case err == nil:
-		return nil
+		return &model.Cart{
+			ID:        cart.ID,
+			Positions: calculatePositionPrices(cart.Positions),
+		}, nil
 	default:
 		panic(err)
 	}
 }
 
-// Update updates the given cart. ErrNotFound is returned if the cart with the
-// same id does not exist. ErrForbidden is returned if the cart exists, but
-// updating it is not allowed for the current user.
-func (c *Cart) Update(ctx context.Context, cart *model.Cart) error {
+// UpdateAndGet updates the given cart. ErrNotFound is returned if the cart with
+// the same id does not exist. ErrForbidden is returned if the cart exists, but
+// updating it is not allowed for the current user. The cart is returned with
+// all prices already calculated.
+func (c *Cart) UpdateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart, error) {
 	err := c.CartRepository.UpdateCartOfUser(ctx,
 		authentication.AuthenticatedUser(ctx).ID,
 		cart.ID,
@@ -43,14 +48,26 @@ func (c *Cart) Update(ctx context.Context, cart *model.Cart) error {
 	)
 	switch {
 	case errors.Is(err, persistence.ErrNotFound):
-		return ErrNotFound
+		return nil, ErrNotFound
 	case errors.Is(err, persistence.ErrNotOwnedByUser):
-		return ErrForbidden
+		return nil, ErrForbidden
 	case err == nil:
-		return nil
+		return &model.Cart{
+			ID:        cart.ID,
+			Positions: calculatePositionPrices(cart.Positions),
+		}, nil
 	default:
 		panic(err)
 	}
+}
+
+func calculatePositionPrices(positions []model.Position) []model.Position {
+	result := make([]model.Position, len(positions))
+	for i, position := range positions {
+		position.Price = position.Quantity * position.Product.Price
+		result[i] = position
+	}
+	return result
 }
 
 func convertCartPositions(cartPositions []model.Position) (positions []struct {

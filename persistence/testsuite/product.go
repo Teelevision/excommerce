@@ -199,3 +199,92 @@ func (s *ProductRepositoryTestSuite) TestFindAllProducts() {
 		wg.Wait()
 	})
 }
+
+// TestFindProduct tests finding all products.
+func (s *ProductRepositoryTestSuite) TestFindProduct() {
+	s.Run("finds product", func() {
+		r := s.NewRepository()
+		err := r.CreateProduct(ctx, "e6c73a05-c169-452e-8a6c-4afd9ffeb8ba", "北京市", 1337)
+		s.Require().NoError(err)
+		product, err := r.FindProduct(ctx, "e6c73a05-c169-452e-8a6c-4afd9ffeb8ba")
+		s.NoError(err)
+		s.Equal(&model.Product{
+			ID:    "e6c73a05-c169-452e-8a6c-4afd9ffeb8ba",
+			Name:  "北京市",
+			Price: 1337,
+		}, product)
+	})
+	s.Run("finds one among many products", func() {
+		r := s.NewRepository()
+		for _, c := range []struct {
+			id, name string
+			price    int
+		}{
+			{"37ed5f9b-684d-4077-bae5-5ac283272a09", "name 223", 223},
+			{"8303f166-3e2b-4c4a-a27e-922f6e10d6ad", "name 224", 224},
+			{"ebf852c3-0a82-48b9-b51a-1d35bea3a263", "name 225", 225},
+			{"11b75e75-63b5-40ba-81c3-bb5fb231854c", "name 226", 226},
+			{"494b3baf-3b90-46b9-9026-fc92377e127f", "name 227", 227},
+			{"e78d6142-0be8-4355-8cb0-ae4b0d8bcabf", "name 228", 228},
+			{"dfeacc59-874d-4f22-8447-9661901f2070", "name 229", 229},
+		} {
+			err := r.CreateProduct(ctx, c.id, c.name, c.price)
+			s.Require().NoError(err)
+		}
+		product, err := r.FindProduct(ctx, "494b3baf-3b90-46b9-9026-fc92377e127f")
+		s.NoError(err)
+		s.Equal(&model.Product{
+			ID:    "494b3baf-3b90-46b9-9026-fc92377e127f",
+			Name:  "name 227",
+			Price: 227,
+		}, product)
+	})
+	s.Run("does not find other product", func() {
+		r := s.NewRepository()
+		for _, c := range []struct {
+			id, name string
+			price    int
+		}{
+			{"629faf00-6ffd-4c87-8b7b-7805162709bc", "name 248", 248},
+			{"47f8ce74-6581-4be9-b696-1d5ca1065e48", "name 249", 249},
+			{"3cc44ebe-177a-4651-8de9-bb2aae53699c", "name 250", 250},
+		} {
+			err := r.CreateProduct(ctx, c.id, c.name, c.price)
+			s.Require().NoError(err)
+		}
+		product, err := r.FindProduct(ctx, "efc07346-98ac-4c6d-81e9-af3a93c03c71")
+		s.True(errors.Is(err, persistence.ErrNotFound))
+		s.Nil(product)
+	})
+	s.Run("works concurrently", func() {
+		r := s.NewRepository()
+		var wg sync.WaitGroup
+		type singleCase struct {
+			id, name string
+			price    int
+		}
+		cases := []singleCase{
+			{"012887a6-0f3a-447e-a524-2ea2f70264c4", "name 267", 267},
+			{"75199849-5dde-4d87-811a-504e1893e31c", "name 268", 268},
+			{"74c84ced-0430-4076-b65c-be72930ed7e9", "name 269", 269},
+			{"7aee97ac-767e-49c5-9df7-b572dd12875c", "name 270", 270},
+			{"ec20f20e-3173-4b8f-a6a2-2194936f81d9", "name 271", 271},
+			{"b067259d-c1ef-4915-af2a-bec3ada752da", "name 272", 272},
+		}
+		do := func(cases []singleCase) {
+			defer wg.Done()
+			for _, c := range cases {
+				err := r.CreateProduct(ctx, c.id, c.name, c.price)
+				s.Require().NoError(err)
+			}
+			for _, c := range cases {
+				_, err := r.FindProduct(ctx, c.id)
+				s.Require().NoError(err)
+			}
+		}
+		wg.Add(2)
+		go do(cases[:3])
+		go do(cases[3:])
+		wg.Wait()
+	})
+}

@@ -31,6 +31,9 @@ type ProductRepository interface {
 	CreateProduct(ctx context.Context, id, name string, price int) error
 	// FindAllProducts returns all stored products.
 	FindAllProducts(context.Context) ([]*model.Product, error)
+	// FindProduct returns the product with the given id. ErrNotFound is
+	// returned if there is no product with the id.
+	FindProduct(ctx context.Context, id string) (*model.Product, error)
 }
 
 // CartRepository stores and loads carts and their positions. It is safe for

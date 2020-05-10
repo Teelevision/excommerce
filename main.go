@@ -39,8 +39,9 @@ func main() {
 
 	// apis
 	cartsAPI := &openapi.CartsAPI{
-		Authenticator:  &authenticator,
-		CartController: &cartController,
+		Authenticator:     &authenticator,
+		CartController:    &cartController,
+		ProductController: &productController,
 	}
 	ordersAPI := &openapi.OrdersAPI{}
 	productsAPI := &openapi.ProductsAPI{

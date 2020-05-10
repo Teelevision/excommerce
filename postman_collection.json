@@ -181,7 +181,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"positions\": [\n    {\n      \"quantity\": 3,\n      \"product\": {\n        \"id\": \"0061f256-d4b8-4dd3-85e3-aaaa88a050d2\"\n      }\n    }\n  ]\n}",
+							"raw": "{\n  \"positions\": [\n    {\n      \"quantity\": 3,\n      \"product\": {\n        \"id\": \"{{product[Orange]}}\"\n      }\n    }\n  ]\n}",
 							"options": {
 								"raw": {
 									"language": "json"

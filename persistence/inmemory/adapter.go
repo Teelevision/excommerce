@@ -169,6 +169,24 @@ func (a *Adapter) FindAllProducts(_ context.Context) ([]*model.Product, error) {
 	return result, nil
 }
 
+// FindProduct returns the product with the given id. ErrNotFound is returned if
+// there is no product with the id.
+func (a *Adapter) FindProduct(ctx context.Context, id string) (*model.Product, error) {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	product, ok := a.productsByID[id]
+	if !ok {
+		return nil, persistence.ErrNotFound
+	}
+
+	return &model.Product{
+		ID:    id,
+		Name:  product.name,
+		Price: product.price,
+	}, nil
+}
+
 var _ persistence.CartRepository = (*Adapter)(nil)
 
 type cart struct {
