@@ -257,6 +257,46 @@
 					"response": []
 				},
 				{
+					"name": "Delete a cart",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "f175dad5-1698-471e-b784-f8577731c43c",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "399589ca-9d0c-4c4f-9126-8b816d846d8f",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{HOST}}/carts/{{cart.id}}",
+							"host": [
+								"{{HOST}}"
+							],
+							"path": [
+								"carts",
+								"{{cart.id}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Get all carts",
 					"event": [
 						{
