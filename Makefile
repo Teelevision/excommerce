@@ -1,4 +1,4 @@
-.PHONY: build run openapi redoc frontend
+.PHONY: build run openapi client redoc frontend
 
 build:
 	docker build -t excommerce .
@@ -14,6 +14,13 @@ openapi: api/openapi.yaml
 			-g go-server \
 			-i /local/$< \
 			-o /local
+
+client: api/openapi.yaml
+	docker run --rm -v ${PWD}:/local \
+		openapitools/openapi-generator-cli:v4.3.0 generate \
+			-g typescript-axios \
+			-i /local/$< \
+			-o /local/frontend/client
 
 redoc:
 	docker run -it --rm -p 8081:80 \
