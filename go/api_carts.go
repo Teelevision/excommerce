@@ -58,7 +58,7 @@ func (c *CartsAPI) Routes() Routes {
 			"StoreCart",
 			strings.ToUpper("Put"),
 			"/beta/carts/{cartId}",
-			c.Authenticator.Middleware(http.HandlerFunc(c.StoreCart)).ServeHTTP, // TODO: improve this
+			c.Authenticator.HandlerFunc(c.StoreCart),
 		},
 	}
 }

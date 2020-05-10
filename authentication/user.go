@@ -32,11 +32,11 @@ func AuthenticatedUser(ctx context.Context) *model.User {
 	return &user
 }
 
-// Middleware returns a handler that authenticates the user making the request
-// and add that user to the context. Using this middleware enables the usage of
-// AuthenticatedUser to retrieve the user that made the request.
-func (a *Authenticator) Middleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// HandlerFunc returns a handler func that authenticates the user making the
+// request and add that user to the context. Using this middleware enables the
+// usage of AuthenticatedUser to retrieve the user that made the request.
+func (a *Authenticator) HandlerFunc(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		id, password, ok := r.BasicAuth()
 		if !ok {
 			w.WriteHeader(http.StatusUnauthorized) // 401
@@ -51,9 +51,9 @@ func (a *Authenticator) Middleware(next http.Handler) http.Handler {
 			w.WriteHeader(http.StatusUnauthorized) // 401
 		case err == nil:
 			ctx = context.WithValue(ctx, userCtxKey{}, *user)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			next(w, r.WithContext(ctx))
 		default:
 			panic(err)
 		}
-	})
+	}
 }
