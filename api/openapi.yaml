@@ -278,6 +278,8 @@ paths:
           description: You are forbidden to delete this cart.
         404:
           description: The cart does not exist.
+        410:
+          description: The cart was deleted.
         423:
           description: The cart is locked and cannot be deleted. A cart is
             locked if there is a placed order for that cart.

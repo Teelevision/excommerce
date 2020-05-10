@@ -510,3 +510,73 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 		}, cart)
 	})
 }
+
+// TestDeleteCartOfUser tests deleting a cart of a user.
+func (s *CartRepositoryTestSuite) TestDeleteCartOfUser() {
+	s.Run("deletes a cart", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		err = r.DeleteCartOfUser(ctx, "user", "id")
+		s.Require().NoError(err)
+		s.Run("prevents deleting it again", func() {
+			err := r.DeleteCartOfUser(ctx, "user", "id")
+			s.True(errors.Is(err, persistence.ErrDeleted))
+		})
+		s.Run("prevents accessing it", func() {
+			_, err := r.FindCartOfUser(ctx, "user", "id")
+			s.True(errors.Is(err, persistence.ErrDeleted))
+			carts, err := r.FindAllUnlockedCartsOfUser(ctx, "user")
+			s.Empty(carts)
+		})
+		s.Run("prevents re-creating it", func() {
+			err := r.CreateCart(ctx, "user", "id", nil)
+			s.True(errors.Is(err, persistence.ErrConflict))
+		})
+		s.Run("prevents updating it", func() {
+			err := r.UpdateCartOfUser(ctx, "user", "id", nil)
+			s.True(errors.Is(err, persistence.ErrDeleted))
+		})
+	})
+	s.Run("user is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		err = r.DeleteCartOfUser(ctx, "USER", "id")
+		s.True(errors.Is(err, persistence.ErrNotOwnedByUser))
+	})
+	s.Run("id is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		err = r.DeleteCartOfUser(ctx, "user", "ID")
+		s.True(errors.Is(err, persistence.ErrNotFound))
+	})
+	s.Run("works concurrently", func() {
+		r := s.NewRepository()
+		var wg sync.WaitGroup
+		ids := []string{
+			"1405a152-2dc7-4695-91b3-cfe5359f8019",
+			"cedcaf96-7506-467d-8e4c-81c2d3be0a37",
+			"ca5d5302-33cb-4a23-87e8-3afb5e3bab2e",
+			"fa654176-7929-4ae0-8d48-2ef483f97332",
+			"d6e47667-ce97-467f-b0f2-edf8c35710be",
+			"59e247f7-80cc-47a1-986d-2d32a40a6d78",
+		}
+		do := func(ids []string) {
+			defer wg.Done()
+			for _, id := range ids {
+				err := r.CreateCart(ctx, "user", id, nil)
+				s.Require().NoError(err)
+			}
+			for _, id := range ids {
+				err := r.DeleteCartOfUser(ctx, "user", id)
+				s.Require().NoError(err)
+			}
+		}
+		wg.Add(2)
+		go do(ids[:3])
+		go do(ids[3:])
+		wg.Wait()
+	})
+}

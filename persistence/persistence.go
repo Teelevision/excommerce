@@ -48,8 +48,9 @@ type CartRepository interface {
 	}) error
 	// UpdateCartOfUser updates a cart of the given user with new positions. Any
 	// existing positions are replaced. ErrNotFound is returned if the cart does
-	// not exist. ErrNotOwnedByUser is returned if the cart exists but it's not
-	// owned by the given user.
+	// not exist. ErrDeleted is returned if the cart did exist but is deleted.
+	// ErrNotOwnedByUser is returned if the cart exists but it's not owned by
+	// the given user.
 	UpdateCartOfUser(ctx context.Context, userID, id string, positions []struct {
 		ProductID string
 		Quantity  int
@@ -59,8 +60,13 @@ type CartRepository interface {
 	// of the given user.
 	FindAllUnlockedCartsOfUser(ctx context.Context, userID string) ([]*model.Cart, error)
 	// FindCartOfUser returns the cart of the given user with the given cart id.
-	// ErrNotFound is returned if there is no cart with the id.
-	// ErrNotOwnedByUser is returned if the cart exists but it's not owned by
-	// the given user.
+	// ErrNotFound is returned if there is no cart with the id. ErrDeleted is
+	// returned if the cart did exist but is deleted. ErrNotOwnedByUser is
+	// returned if the cart exists but it's not owned by the given user.
 	FindCartOfUser(ctx context.Context, userID, id string) (*model.Cart, error)
+	// DeleteCartOfUser deletes the cart of the given user with the given cart
+	// id. ErrNotFound is returned if there is no cart with the id. ErrDeleted
+	// is returned if the cart did exist but is deleted. ErrNotOwnedByUser is
+	// returned if the cart exists but it's not owned by the given user.
+	DeleteCartOfUser(ctx context.Context, userID, id string) error
 }

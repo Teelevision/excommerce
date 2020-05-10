@@ -221,8 +221,9 @@ func (a *Adapter) CreateCart(_ context.Context, userID, id string, positions []s
 
 // UpdateCartOfUser updates a cart of the given user with new positions. Any
 // existing positions are replaced. ErrNotFound is returned if the cart does not
-// exist. ErrNotOwnedByUser is returned if the cart exists but it's not owned by
-// the given user.
+// exist. ErrDeleted is returned if the cart did exist but is deleted.
+// ErrNotOwnedByUser is returned if the cart exists but it's not owned by the
+// given user.
 func (a *Adapter) UpdateCartOfUser(ctx context.Context, userID, id string, positions []struct {
 	ProductID string
 	Quantity  int
@@ -234,6 +235,10 @@ func (a *Adapter) UpdateCartOfUser(ctx context.Context, userID, id string, posit
 	cart, ok := a.cartsByID[id]
 	if !ok {
 		return persistence.ErrNotFound
+	}
+
+	if cart == nil {
+		return persistence.ErrDeleted
 	}
 
 	if cart.userID != userID {
@@ -252,6 +257,9 @@ func (a *Adapter) FindAllUnlockedCartsOfUser(_ context.Context, userID string) (
 
 	result := make([]*model.Cart, 0)
 	for id, cart := range a.cartsByID {
+		if cart == nil {
+			continue
+		}
 		if cart.userID != userID {
 			continue
 		}
@@ -261,8 +269,9 @@ func (a *Adapter) FindAllUnlockedCartsOfUser(_ context.Context, userID string) (
 }
 
 // FindCartOfUser returns the cart of the given user with the given cart id.
-// ErrNotFound is returned if there is no cart with the id. ErrNotOwnedByUser is
-// returned if the cart exists but it's not owned by the given user.
+// ErrNotFound is returned if there is no cart with the id. ErrDeleted is
+// returned if the cart did exist but is deleted. ErrNotOwnedByUser is returned
+// if the cart exists but it's not owned by the given user.
 func (a *Adapter) FindCartOfUser(_ context.Context, userID, id string) (*model.Cart, error) {
 	a.mx.Lock()
 	defer a.mx.Unlock()
@@ -272,11 +281,40 @@ func (a *Adapter) FindCartOfUser(_ context.Context, userID, id string) (*model.C
 		return nil, persistence.ErrNotFound
 	}
 
+	if cart == nil {
+		return nil, persistence.ErrDeleted
+	}
+
 	if cart.userID != userID {
 		return nil, persistence.ErrNotOwnedByUser
 	}
 
 	return convertCartOut(id, cart), nil
+}
+
+// DeleteCartOfUser deletes the cart of the given user with the given cart id.
+// ErrNotFound is returned if there is no cart with the id. ErrDeleted is
+// returned if the cart did exist but is deleted. ErrNotOwnedByUser is returned
+// if the cart exists but it's not owned by the given user.
+func (a *Adapter) DeleteCartOfUser(ctx context.Context, userID, id string) error {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	cart, ok := a.cartsByID[id]
+	if !ok {
+		return persistence.ErrNotFound
+	}
+
+	if cart == nil {
+		return persistence.ErrDeleted
+	}
+
+	if cart.userID != userID {
+		return persistence.ErrNotOwnedByUser
+	}
+
+	a.cartsByID[id] = nil
+	return nil
 }
 
 func convertCartOut(id string, cart *cart) *model.Cart {

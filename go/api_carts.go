@@ -27,8 +27,6 @@ var _ Router = (*CartsAPI)(nil)
 
 // A CartsAPI binds http requests to an api service and writes the service results to the http response
 type CartsAPI struct {
-	service CartsAPIServicer
-
 	Authenticator     *authentication.Authenticator
 	CartController    *controller.Cart
 	ProductController *controller.Product
@@ -41,7 +39,7 @@ func (c *CartsAPI) Routes() Routes {
 			"DeleteCart",
 			strings.ToUpper("Delete"),
 			"/beta/carts/{cartId}",
-			c.DeleteCart,
+			c.Authenticator.HandlerFunc(c.DeleteCart),
 		},
 		{
 			"GetAllCarts",
@@ -66,15 +64,28 @@ func (c *CartsAPI) Routes() Routes {
 
 // DeleteCart - Delete a cart
 func (c *CartsAPI) DeleteCart(w http.ResponseWriter, r *http.Request) {
+	// validation
 	params := mux.Vars(r)
 	cartID := params["cartId"]
-	result, err := c.service.DeleteCart(cartID)
-	if err != nil {
-		w.WriteHeader(500)
+	if !uuidPattern.Match([]byte(cartID)) {
+		invalidInput("The cartId of the path is not a UUID.", uuidPattern.String(), w)
 		return
 	}
 
-	EncodeJSONResponse(result, nil, w)
+	// action
+	err := c.CartController.Delete(r.Context(), cartID)
+	switch {
+	case errors.Is(err, controller.ErrForbidden):
+		w.WriteHeader(http.StatusForbidden) // 403
+	case errors.Is(err, controller.ErrNotFound):
+		w.WriteHeader(http.StatusNotFound) // 404
+	case errors.Is(err, controller.ErrDeleted):
+		w.WriteHeader(http.StatusGone) // 410
+	case err == nil:
+		w.WriteHeader(http.StatusNoContent) // 204
+	default:
+		panic(err)
+	}
 }
 
 // GetAllCarts - Get all carts
@@ -118,6 +129,8 @@ func (c *CartsAPI) GetCart(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden) // 403
 	case errors.Is(err, controller.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound) // 404
+	case errors.Is(err, controller.ErrDeleted):
+		w.WriteHeader(http.StatusGone) // 410
 	case err == nil:
 		EncodeJSONResponse(convertCartOut(cart), nil, w)
 	default:
@@ -184,6 +197,8 @@ func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case errors.Is(err, controller.ErrForbidden):
 		w.WriteHeader(http.StatusForbidden) // 403
+	case errors.Is(err, controller.ErrDeleted):
+		w.WriteHeader(http.StatusGone) // 410
 	case err == nil:
 		status := http.StatusOK // 200
 		if !existed {

@@ -16,9 +16,9 @@ type Cart struct {
 }
 
 // Get returns the cart with the given id with all prices calculated.
-// ErrNotFound is retuned if there is not cart with the id. ErrForbidden is
-// returned if the cart exists, but the current user is not allowed to access
-// it.
+// ErrNotFound is retuned if there is no cart with the id. ErrDeleted is
+// returned if the cart did exist but is deleted. ErrForbidden is returned if
+// the cart exists, but the current user is not allowed to access it.
 func (c *Cart) Get(ctx context.Context, cartID string) (*model.Cart, error) {
 	cart, err := c.CartRepository.FindCartOfUser(ctx,
 		authentication.AuthenticatedUser(ctx).ID,
@@ -27,6 +27,8 @@ func (c *Cart) Get(ctx context.Context, cartID string) (*model.Cart, error) {
 	switch {
 	case errors.Is(err, persistence.ErrNotFound):
 		return nil, ErrNotFound
+	case errors.Is(err, persistence.ErrDeleted):
+		return nil, ErrDeleted
 	case errors.Is(err, persistence.ErrNotOwnedByUser):
 		return nil, ErrForbidden
 	case err == nil:
@@ -56,8 +58,8 @@ func (c *Cart) GetAllUnlocked(ctx context.Context) ([]*model.Cart, error) {
 }
 
 // CreateAndGet creates the given cart. ErrConflict is returned if a cart with
-// the same id already exists. The cart is returned with all prices already
-// calculated.
+// the same id already exists or existed. The cart is returned with all prices
+// already calculated.
 func (c *Cart) CreateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart, error) {
 	err := c.CartRepository.CreateCart(ctx,
 		authentication.AuthenticatedUser(ctx).ID,
@@ -76,9 +78,10 @@ func (c *Cart) CreateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 }
 
 // UpdateAndGet updates the given cart. ErrNotFound is returned if the cart with
-// the same id does not exist. ErrForbidden is returned if the cart exists, but
-// updating it is not allowed for the current user. The cart is returned with
-// all prices already calculated.
+// the same id does not exist. ErrDeleted is returned if the cart did exist but
+// is deleted. ErrForbidden is returned if the cart exists, but updating it is
+// not allowed for the current user. The cart is returned with all prices
+// already calculated.
 func (c *Cart) UpdateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart, error) {
 	err := c.CartRepository.UpdateCartOfUser(ctx,
 		authentication.AuthenticatedUser(ctx).ID,
@@ -88,11 +91,36 @@ func (c *Cart) UpdateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 	switch {
 	case errors.Is(err, persistence.ErrNotFound):
 		return nil, ErrNotFound
+	case errors.Is(err, persistence.ErrDeleted):
+		return nil, ErrDeleted
 	case errors.Is(err, persistence.ErrNotOwnedByUser):
 		return nil, ErrForbidden
 	case err == nil:
 		cart.Positions = calculatePositionPrices(cart.Positions)
 		return cart, nil
+	default:
+		panic(err)
+	}
+}
+
+// Delete deletes the cart with the given id. ErrNotFound is retuned if there is
+// no cart with the id. ErrDeleted is returned if the cart did exist but is
+// deleted. ErrForbidden is returned if the cart exists, but the current user is
+// not allowed to delete it.
+func (c *Cart) Delete(ctx context.Context, cartID string) error {
+	err := c.CartRepository.DeleteCartOfUser(ctx,
+		authentication.AuthenticatedUser(ctx).ID,
+		cartID,
+	)
+	switch {
+	case errors.Is(err, persistence.ErrNotFound):
+		return ErrNotFound
+	case errors.Is(err, persistence.ErrDeleted):
+		return ErrDeleted
+	case errors.Is(err, persistence.ErrNotOwnedByUser):
+		return ErrForbidden
+	case err == nil:
+		return nil
 	default:
 		panic(err)
 	}

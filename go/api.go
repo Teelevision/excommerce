@@ -47,17 +47,6 @@ type UsersAPIRouter interface {
 	Register(http.ResponseWriter, *http.Request)
 }
 
-// CartsAPIServicer defines the api actions for the CartsApi service
-// This interface intended to stay up to date with the openapi yaml used to generate it,
-// while the service implementation can ignored with the .openapi-generator-ignore file
-// and updated with the logic required for the API.
-type CartsAPIServicer interface {
-	DeleteCart(string) (interface{}, error)
-	GetAllCarts(bool) (interface{}, error)
-	GetCart(string) (interface{}, error)
-	StoreCart(string, Cart) (interface{}, error)
-}
-
 // OrdersAPIServicer defines the api actions for the OrdersApi service
 // This interface intended to stay up to date with the openapi yaml used to generate it,
 // while the service implementation can ignored with the .openapi-generator-ignore file
