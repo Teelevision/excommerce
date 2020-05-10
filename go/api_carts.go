@@ -131,6 +131,10 @@ func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for i, position := range input.Positions {
+		if position.Quantity < 1 {
+			failValidation("The quantity must be 1 or greater.", fmt.Sprintf("/positions/%d/quantity", i), w)
+			return
+		}
 		if !uuidPattern.Match([]byte(position.Product.ID)) {
 			failValidation("The product id is not a UUID.", fmt.Sprintf("/positions/%d/product/id", i), w)
 			return
