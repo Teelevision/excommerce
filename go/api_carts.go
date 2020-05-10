@@ -53,7 +53,7 @@ func (c *CartsAPI) Routes() Routes {
 			"GetCart",
 			strings.ToUpper("Get"),
 			"/beta/carts/{cartId}",
-			c.GetCart,
+			c.Authenticator.HandlerFunc(c.GetCart),
 		},
 		{
 			"StoreCart",
@@ -92,15 +92,26 @@ func (c *CartsAPI) GetAllCarts(w http.ResponseWriter, r *http.Request) {
 
 // GetCart - Get a cart
 func (c *CartsAPI) GetCart(w http.ResponseWriter, r *http.Request) {
+	// validation
 	params := mux.Vars(r)
 	cartID := params["cartId"]
-	result, err := c.service.GetCart(cartID)
-	if err != nil {
-		w.WriteHeader(500)
+	if !uuidPattern.Match([]byte(cartID)) {
+		invalidInput("The cartId of the path is not a UUID.", uuidPattern.String(), w)
 		return
 	}
 
-	EncodeJSONResponse(result, nil, w)
+	// action
+	cart, err := c.CartController.Get(r.Context(), cartID)
+	switch {
+	case errors.Is(err, controller.ErrForbidden):
+		w.WriteHeader(http.StatusForbidden) // 403
+	case errors.Is(err, controller.ErrNotFound):
+		w.WriteHeader(http.StatusNotFound) // 404
+	case err == nil:
+		EncodeJSONResponse(convertCartOut(cart), nil, w)
+	default:
+		panic(err)
+	}
 }
 
 // StoreCart - Store a cart
@@ -163,22 +174,26 @@ func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
 		if !existed {
 			status = http.StatusCreated // 201
 		}
-		cartOutput := Cart{
-			ID:        cart.ID,
-			Positions: make([]Position, len(cart.Positions)),
-			Locked:    cart.Locked,
-		}
-		for i, position := range cart.Positions {
-			cartOutput.Positions[i].Product.ID = position.Product.ID
-			cartOutput.Positions[i].Product.Name = position.Product.Name
-			cartOutput.Positions[i].Product.Price = float32(position.Product.Price) / 100
-			cartOutput.Positions[i].Quantity = int32(position.Quantity)
-			cartOutput.Positions[i].Price = float32(position.Price) / 100
-		}
-		EncodeJSONResponse(cartOutput, &status, w)
+		EncodeJSONResponse(convertCartOut(cart), &status, w)
 	default:
 		panic(err)
 	}
+}
+
+func convertCartOut(cart *model.Cart) *Cart {
+	out := Cart{
+		ID:        cart.ID,
+		Positions: make([]Position, len(cart.Positions)),
+		Locked:    cart.Locked,
+	}
+	for i, position := range cart.Positions {
+		out.Positions[i].Product.ID = position.Product.ID
+		out.Positions[i].Product.Name = position.Product.Name
+		out.Positions[i].Product.Price = float32(position.Product.Price) / 100
+		out.Positions[i].Quantity = int32(position.Quantity)
+		out.Positions[i].Price = float32(position.Price) / 100
+	}
+	return &out
 }
 
 var uuidPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)

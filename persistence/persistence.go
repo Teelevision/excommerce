@@ -58,4 +58,9 @@ type CartRepository interface {
 	// FindAllUnlockedCartsOfUser returns all stored carts and their positions
 	// of the given user.
 	FindAllUnlockedCartsOfUser(ctx context.Context, userID string) ([]*model.Cart, error)
+	// FindCartOfUser returns the cart of the given user with the given cart id.
+	// ErrNotFound is returned if there is no cart with the id.
+	// ErrNotOwnedByUser is returned if the cart exists but it's not owned by
+	// the given user.
+	FindCartOfUser(ctx context.Context, userID, id string) (*model.Cart, error)
 }

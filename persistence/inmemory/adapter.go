@@ -255,18 +255,41 @@ func (a *Adapter) FindAllUnlockedCartsOfUser(_ context.Context, userID string) (
 		if cart.userID != userID {
 			continue
 		}
-		r := &model.Cart{
-			ID:        id,
-			Positions: make([]model.Position, len(cart.positions)),
-		}
-		for i, position := range cart.positions {
-			r.Positions[i] = model.Position{
-				ProductID: position.ProductID,
-				Quantity:  position.Quantity,
-				Price:     position.Price,
-			}
-		}
-		result = append(result, r)
+		result = append(result, convertCartOut(id, cart))
 	}
 	return result, nil
+}
+
+// FindCartOfUser returns the cart of the given user with the given cart id.
+// ErrNotFound is returned if there is no cart with the id. ErrNotOwnedByUser is
+// returned if the cart exists but it's not owned by the given user.
+func (a *Adapter) FindCartOfUser(_ context.Context, userID, id string) (*model.Cart, error) {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	cart, ok := a.cartsByID[id]
+	if !ok {
+		return nil, persistence.ErrNotFound
+	}
+
+	if cart.userID != userID {
+		return nil, persistence.ErrNotOwnedByUser
+	}
+
+	return convertCartOut(id, cart), nil
+}
+
+func convertCartOut(id string, cart *cart) *model.Cart {
+	out := model.Cart{
+		ID:        id,
+		Positions: make([]model.Position, len(cart.positions)),
+	}
+	for i, position := range cart.positions {
+		out.Positions[i] = model.Position{
+			ProductID: position.ProductID,
+			Quantity:  position.Quantity,
+			Price:     position.Price, // TODO: don't save the price
+		}
+	}
+	return &out
 }

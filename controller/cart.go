@@ -11,7 +11,43 @@ import (
 
 // Cart is the controller that handles carts.
 type Cart struct {
-	CartRepository persistence.CartRepository
+	CartRepository    persistence.CartRepository
+	ProductRepository persistence.ProductRepository
+}
+
+// Get returns the cart with the given id with all prices calculated.
+// ErrNotFound is retuned if there is not cart with the id. ErrForbidden is
+// returned if the cart exists, but the current user is not allowed to access
+// it.
+func (c *Cart) Get(ctx context.Context, cartID string) (*model.Cart, error) {
+	cart, err := c.CartRepository.FindCartOfUser(ctx,
+		authentication.AuthenticatedUser(ctx).ID,
+		cartID,
+	)
+	switch {
+	case errors.Is(err, persistence.ErrNotFound):
+		return nil, ErrNotFound
+	case errors.Is(err, persistence.ErrNotOwnedByUser):
+		return nil, ErrForbidden
+	case err == nil:
+		// load products
+		for i, position := range cart.Positions {
+			product, err := c.ProductRepository.FindProduct(ctx, position.ProductID)
+			switch {
+			case errors.Is(err, persistence.ErrNotFound):
+				cart.Positions[i].ProductID = ""
+				cart.Positions[i].Product = &model.Product{Name: "Product not available anymore."}
+			case err == nil:
+				cart.Positions[i].Product = product
+			default:
+				panic(err)
+			}
+		}
+		cart.Positions = calculatePositionPrices(cart.Positions)
+		return cart, nil
+	default:
+		panic(err)
+	}
 }
 
 // CreateAndGet creates the given cart. ErrConflict is returned if a cart with
@@ -27,10 +63,8 @@ func (c *Cart) CreateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 	case errors.Is(err, persistence.ErrConflict):
 		return nil, ErrConflict
 	case err == nil:
-		return &model.Cart{
-			ID:        cart.ID,
-			Positions: calculatePositionPrices(cart.Positions),
-		}, nil
+		cart.Positions = calculatePositionPrices(cart.Positions)
+		return cart, nil
 	default:
 		panic(err)
 	}
@@ -52,10 +86,8 @@ func (c *Cart) UpdateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 	case errors.Is(err, persistence.ErrNotOwnedByUser):
 		return nil, ErrForbidden
 	case err == nil:
-		return &model.Cart{
-			ID:        cart.ID,
-			Positions: calculatePositionPrices(cart.Positions),
-		}, nil
+		cart.Positions = calculatePositionPrices(cart.Positions)
+		return cart, nil
 	default:
 		panic(err)
 	}

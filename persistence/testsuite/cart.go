@@ -401,3 +401,75 @@ func (s *CartRepositoryTestSuite) TestFindAllUnlockedCartsOfUser() {
 		wg.Wait()
 	})
 }
+
+// TestFindCartOfUser tests finding a cart of a user.
+func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
+	s.Run("finds a cart", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx,
+			"user",
+			"id",
+			[]struct {
+				ProductID string
+				Quantity  int
+				Price     int
+			}{
+				{"49dd8502-2d5a-4c71-ac50-e0affcba22c2", 1, 999},
+				{"f99a9ea1-8c0f-4e86-b778-18b2537f6234", 999, -1},
+			}, // products
+		)
+		s.Require().NoError(err)
+		cart, err := r.FindCartOfUser(ctx, "user", "id")
+		s.NoError(err)
+		s.Equal(&model.Cart{
+			ID: "id",
+			Positions: []model.Position{
+				{ProductID: "49dd8502-2d5a-4c71-ac50-e0affcba22c2", Quantity: 1, Price: 999},
+				{ProductID: "f99a9ea1-8c0f-4e86-b778-18b2537f6234", Quantity: 999, Price: -1},
+			},
+		}, cart)
+	})
+	s.Run("user is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		cart, err := r.FindCartOfUser(ctx, "USER", "id")
+		s.True(errors.Is(err, persistence.ErrNotOwnedByUser))
+		s.Nil(cart)
+	})
+	s.Run("id is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		cart, err := r.FindCartOfUser(ctx, "user", "ID")
+		s.True(errors.Is(err, persistence.ErrNotFound))
+		s.Nil(cart)
+	})
+	s.Run("works concurrently", func() {
+		r := s.NewRepository()
+		var wg sync.WaitGroup
+		ids := []string{
+			"5353f5fb-0553-47b8-8a8d-4cc1f5b9f5e8",
+			"b0be6663-50cc-49d4-aaa6-ad45479e76ee",
+			"53a65e23-4274-4e24-9a2e-757bf4935a2e",
+			"f8b68086-0907-4819-a599-cb3d5d498067",
+			"10cbe2bf-4cff-48d5-b912-63e457b12bad",
+			"f7865585-5e94-42a3-ac6b-44f3287fa349",
+		}
+		do := func(ids []string) {
+			defer wg.Done()
+			for _, id := range ids {
+				err := r.CreateCart(ctx, "user", id, nil)
+				s.Require().NoError(err)
+			}
+			for _, id := range ids {
+				_, err := r.FindCartOfUser(ctx, "user", id)
+				s.Require().NoError(err)
+			}
+		}
+		wg.Add(2)
+		go do(ids[:3])
+		go do(ids[3:])
+		wg.Wait()
+	})
+}

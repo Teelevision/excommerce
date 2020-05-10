@@ -200,7 +200,7 @@ func (s *ProductRepositoryTestSuite) TestFindAllProducts() {
 	})
 }
 
-// TestFindProduct tests finding all products.
+// TestFindProduct tests finding a product.
 func (s *ProductRepositoryTestSuite) TestFindProduct() {
 	s.Run("finds product", func() {
 		r := s.NewRepository()
