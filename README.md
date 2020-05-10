@@ -13,6 +13,10 @@ Example Commerce System
 * Start the server build on `localhost:8080`: `make run`
 * Start api doc server on [localhost:8081](http://localhost:8081/): `make redoc`
 
+## Frontend
+
+* Run the dev frontend on [localhost:3000](http://localhost:3000/): `make frontend`
+
 ## Design
 
 ```

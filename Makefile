@@ -1,4 +1,4 @@
-.PHONY: build run openapi redoc
+.PHONY: build run openapi redoc frontend
 
 build:
 	docker build -t excommerce .
@@ -20,3 +20,8 @@ redoc:
 		-v ${PWD}/api/openapi.yaml:/usr/share/nginx/html/openapi.yaml:ro \
 		-e SPEC_URL=openapi.yaml \
 		redocly/redoc:v2.0.0-rc.28
+
+frontend:
+	docker run -it --rm -p 127.0.0.1:3000:3000/tcp \
+		-v ${PWD}/frontend:/app --workdir=/app \
+		node:14.2.0-stretch yarn dev
