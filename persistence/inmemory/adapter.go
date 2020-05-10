@@ -205,10 +205,14 @@ func (a *Adapter) CreateCart(_ context.Context, userID, id string, positions map
 		return persistence.ErrConflict
 	}
 
-	a.cartsByID[id] = &cart{
+	cart := cart{
 		userID:    userID,
-		positions: positions,
+		positions: make(map[string]int, len(positions)),
 	}
+	for productID, quantity := range positions {
+		cart.positions[productID] = quantity
+	}
+	a.cartsByID[id] = &cart
 	return nil
 }
 
@@ -234,7 +238,10 @@ func (a *Adapter) UpdateCartOfUser(ctx context.Context, userID, id string, posit
 		return persistence.ErrNotOwnedByUser
 	}
 
-	cart.positions = positions
+	cart.positions = make(map[string]int, len(positions))
+	for productID, quantity := range positions {
+		cart.positions[productID] = quantity
+	}
 	return nil
 }
 

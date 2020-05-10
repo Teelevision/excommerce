@@ -32,7 +32,7 @@ func (s *CartRepositoryTestSuite) TestCreateCart() {
 			map[string]int{
 				"ce21148d-f8c8-437a-bd9c-fd72797803dd": 1,
 				"c92a017b-3e75-43d0-bb38-7f05e7d9b3c3": 999,
-			}, // products
+			}, // positions
 		)
 		s.NoError(err)
 	})
@@ -114,6 +114,27 @@ func (s *CartRepositoryTestSuite) TestCreateCart() {
 		go do(ids[3:])
 		wg.Wait()
 	})
+	s.Run("changing the input does not have any side effects", func() {
+		r := s.NewRepository()
+		positions := map[string]int{
+			"6a11c1d3-bc6d-45c7-968d-4fdcd63f05b3": 2,
+			"237bd725-bec1-4cf5-be3b-51fcb6ee1d0a": 1,
+		}
+		err := r.CreateCart(ctx, "user", "id", positions)
+		s.Require().NoError(err)
+		// changing the input ...
+		positions["6a11c1d3-bc6d-45c7-968d-4fdcd63f05b3"]++
+		delete(positions, "237bd725-bec1-4cf5-be3b-51fcb6ee1d0a")
+		// ... does not have any side effects
+		cart, err := r.FindCartOfUser(ctx, "user", "id")
+		s.NoError(err)
+		s.ElementsMatch([]model.Position{
+			{ProductID: "6a11c1d3-bc6d-45c7-968d-4fdcd63f05b3", Quantity: 2},
+			{ProductID: "237bd725-bec1-4cf5-be3b-51fcb6ee1d0a", Quantity: 1},
+		}, cart.Positions)
+		cart.Positions = nil
+		s.Equal(&model.Cart{ID: "id"}, cart)
+	})
 }
 
 // TestUpdateCartOfUser tests updating carts.
@@ -126,7 +147,7 @@ func (s *CartRepositoryTestSuite) TestUpdateCartOfUser() {
 			map[string]int{
 				"bb364bf5-e1fb-445d-be2d-ebad49316e0c": 1,
 				"77181602-1b4c-463c-b9a5-c2188610fd68": 999,
-			}, // products
+			}, // positions
 		)
 		s.Require().NoError(err)
 		err = r.UpdateCartOfUser(ctx,
@@ -135,7 +156,7 @@ func (s *CartRepositoryTestSuite) TestUpdateCartOfUser() {
 			map[string]int{
 				"e11c7885-92a9-4833-8e52-ed020fef5aff": 2,
 				"ff62397c-cbcf-4cd9-b57d-0a9348dd8ef4": 3,
-			}, // products
+			}, // positions
 		)
 		s.Require().NoError(err)
 	})
@@ -179,6 +200,29 @@ func (s *CartRepositoryTestSuite) TestUpdateCartOfUser() {
 		go do(ids[:3])
 		go do(ids[3:])
 		wg.Wait()
+	})
+	s.Run("changing the input does not have any side effects", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		positions := map[string]int{
+			"268621f3-24dc-48f8-ad5b-db3e9a8a5f4e": 2,
+			"10637059-e964-4528-8f3e-81a329614249": 1,
+		}
+		err = r.UpdateCartOfUser(ctx, "user", "id", positions)
+		s.Require().NoError(err)
+		// changing the input ...
+		positions["268621f3-24dc-48f8-ad5b-db3e9a8a5f4e"]++
+		delete(positions, "10637059-e964-4528-8f3e-81a329614249")
+		// ... does not have any side effects
+		cart, err := r.FindCartOfUser(ctx, "user", "id")
+		s.NoError(err)
+		s.ElementsMatch([]model.Position{
+			{ProductID: "268621f3-24dc-48f8-ad5b-db3e9a8a5f4e", Quantity: 2},
+			{ProductID: "10637059-e964-4528-8f3e-81a329614249", Quantity: 1},
+		}, cart.Positions)
+		cart.Positions = nil
+		s.Equal(&model.Cart{ID: "id"}, cart)
 	})
 }
 
@@ -372,7 +416,7 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 			map[string]int{
 				"49dd8502-2d5a-4c71-ac50-e0affcba22c2": 1,
 				"f99a9ea1-8c0f-4e86-b778-18b2537f6234": 999,
-			}, // products
+			}, // positions
 		)
 		s.Require().NoError(err)
 		cart, err := r.FindCartOfUser(ctx, "user", "id")
@@ -435,7 +479,7 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 			"id",
 			map[string]int{
 				"04d2c9a8-068d-40ac-acd7-7bf3f5357953": 2,
-			}, // products
+			}, // positions
 		)
 		s.Require().NoError(err)
 		cart, err := r.FindCartOfUser(ctx, "user", "id")
