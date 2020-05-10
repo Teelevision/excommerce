@@ -287,4 +287,28 @@ func (s *ProductRepositoryTestSuite) TestFindProduct() {
 		go do(cases[3:])
 		wg.Wait()
 	})
+	s.Run("changing the result does not have any side effects", func() {
+		r := s.NewRepository()
+		err := r.CreateProduct(ctx, "aeaedf82-2d9b-4e69-948b-c3ab92f893df", "北京市", 1337)
+		s.Require().NoError(err)
+		product, err := r.FindProduct(ctx, "aeaedf82-2d9b-4e69-948b-c3ab92f893df")
+		s.Require().NoError(err)
+		s.Require().Equal(&model.Product{
+			ID:    "aeaedf82-2d9b-4e69-948b-c3ab92f893df",
+			Name:  "北京市",
+			Price: 1337,
+		}, product)
+		// changing the result ...
+		product.ID = "changed"
+		product.Name = "changed"
+		product.Price--
+		// ... does not have any side effects
+		product, err = r.FindProduct(ctx, "aeaedf82-2d9b-4e69-948b-c3ab92f893df")
+		s.NoError(err)
+		s.Equal(&model.Product{
+			ID:    "aeaedf82-2d9b-4e69-948b-c3ab92f893df",
+			Name:  "北京市",
+			Price: 1337,
+		}, product)
+	})
 }

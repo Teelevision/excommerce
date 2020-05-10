@@ -207,6 +207,27 @@ func (s *UserRepositoryTestSuite) TestFindUserByNameAndPassword() {
 		go do(cases[3:])
 		wg.Wait()
 	})
+	s.Run("changing the result does not have any side effects", func() {
+		r := s.NewRepository()
+		err := r.CreateUser(ctx, "9b19601c-701b-47c8-8f55-68326905f6c5", "北京市", "广州市")
+		s.Require().NoError(err)
+		user, err := r.FindUserByNameAndPassword(ctx, "北京市", "广州市")
+		s.Require().NoError(err)
+		s.Require().Equal(&model.User{
+			ID:   "9b19601c-701b-47c8-8f55-68326905f6c5",
+			Name: "北京市",
+		}, user)
+		// changing the result ...
+		user.ID = "changed"
+		user.Name = "changed"
+		// ... does not have any side effects
+		user, err = r.FindUserByNameAndPassword(ctx, "北京市", "广州市")
+		s.NoError(err)
+		s.Equal(&model.User{
+			ID:   "9b19601c-701b-47c8-8f55-68326905f6c5",
+			Name: "北京市",
+		}, user)
+	})
 }
 
 // TestFindUserByIDAndPassword tests finding a user by name and password.
@@ -298,6 +319,27 @@ func (s *UserRepositoryTestSuite) TestFindUserByIDAndPassword() {
 		go do(cases[:3])
 		go do(cases[3:])
 		wg.Wait()
+	})
+	s.Run("changing the result does not have any side effects", func() {
+		r := s.NewRepository()
+		err := r.CreateUser(ctx, "9cd5698a-cdf1-42c6-8d47-0f26db05740b", "北京市", "广州市")
+		s.Require().NoError(err)
+		user, err := r.FindUserByIDAndPassword(ctx, "9cd5698a-cdf1-42c6-8d47-0f26db05740b", "广州市")
+		s.Require().NoError(err)
+		s.Require().Equal(&model.User{
+			ID:   "9cd5698a-cdf1-42c6-8d47-0f26db05740b",
+			Name: "北京市",
+		}, user)
+		// changing the result ...
+		user.ID = "changed"
+		user.Name = "changed"
+		// ... does not have any side effects
+		user, err = r.FindUserByIDAndPassword(ctx, "9cd5698a-cdf1-42c6-8d47-0f26db05740b", "广州市")
+		s.NoError(err)
+		s.Equal(&model.User{
+			ID:   "9cd5698a-cdf1-42c6-8d47-0f26db05740b",
+			Name: "北京市",
+		}, user)
 	})
 }
 

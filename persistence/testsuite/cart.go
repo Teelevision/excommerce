@@ -472,4 +472,41 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 		go do(ids[3:])
 		wg.Wait()
 	})
+	s.Run("changing the result does not have any side effects", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx,
+			"user",
+			"id",
+			[]struct {
+				ProductID string
+				Quantity  int
+				Price     int
+			}{
+				{"04d2c9a8-068d-40ac-acd7-7bf3f5357953", 2, 500},
+			}, // products
+		)
+		s.Require().NoError(err)
+		cart, err := r.FindCartOfUser(ctx, "user", "id")
+		s.Require().NoError(err)
+		s.Require().Equal(&model.Cart{
+			ID: "id",
+			Positions: []model.Position{
+				{ProductID: "04d2c9a8-068d-40ac-acd7-7bf3f5357953", Quantity: 2, Price: 500},
+			},
+		}, cart)
+		// changing the result ...
+		cart.ID = "changed"
+		cart.Locked = true
+		cart.Positions[0].ProductID = "changed"
+		cart.Positions = nil
+		// ... does not have any side effects
+		cart, err = r.FindCartOfUser(ctx, "user", "id")
+		s.NoError(err)
+		s.Equal(&model.Cart{
+			ID: "id",
+			Positions: []model.Position{
+				{ProductID: "04d2c9a8-068d-40ac-acd7-7bf3f5357953", Quantity: 2, Price: 500},
+			},
+		}, cart)
+	})
 }
