@@ -47,7 +47,7 @@ func (c *CartsAPI) Routes() Routes {
 			"GetAllCarts",
 			strings.ToUpper("Get"),
 			"/beta/carts",
-			c.GetAllCarts,
+			c.Authenticator.HandlerFunc(c.GetAllCarts),
 		},
 		{
 			"GetCart",
@@ -79,15 +79,26 @@ func (c *CartsAPI) DeleteCart(w http.ResponseWriter, r *http.Request) {
 
 // GetAllCarts - Get all carts
 func (c *CartsAPI) GetAllCarts(w http.ResponseWriter, r *http.Request) {
+	// validation
 	query := r.URL.Query()
-	locked := query.Get("locked") == "true"
-	result, err := c.service.GetAllCarts(locked)
-	if err != nil {
-		w.WriteHeader(500)
+	locked := query.Get("locked")
+	if locked != "false" {
+		invalidInput("The locked query parameter is invalid.", "Only locked=false is supported.", w)
 		return
 	}
 
-	EncodeJSONResponse(result, nil, w)
+	// action
+	carts, err := c.CartController.GetAllUnlocked(r.Context())
+	switch {
+	case err == nil:
+		out := make([]*Cart, len(carts))
+		for i, cart := range carts {
+			out[i] = convertCartOut(cart)
+		}
+		EncodeJSONResponse(out, nil, w)
+	default:
+		panic(err)
+	}
 }
 
 // GetCart - Get a cart

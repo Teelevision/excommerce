@@ -31,20 +31,25 @@ func (c *Cart) Get(ctx context.Context, cartID string) (*model.Cart, error) {
 		return nil, ErrForbidden
 	case err == nil:
 		// load products
-		for i, position := range cart.Positions {
-			product, err := c.ProductRepository.FindProduct(ctx, position.ProductID)
-			switch {
-			case errors.Is(err, persistence.ErrNotFound):
-				cart.Positions[i].ProductID = ""
-				cart.Positions[i].Product = &model.Product{Name: "Product not available anymore."}
-			case err == nil:
-				cart.Positions[i].Product = product
-			default:
-				panic(err)
-			}
-		}
+		c.loadProducts(ctx, cart)
 		cart.Positions = calculatePositionPrices(cart.Positions)
 		return cart, nil
+	default:
+		panic(err)
+	}
+}
+
+// GetAllUnlocked returns all unlocked carts of the current user.
+func (c *Cart) GetAllUnlocked(ctx context.Context) ([]*model.Cart, error) {
+	carts, err := c.CartRepository.FindAllUnlockedCartsOfUser(ctx,
+		authentication.AuthenticatedUser(ctx).ID)
+	switch {
+	case err == nil:
+		for _, cart := range carts {
+			c.loadProducts(ctx, cart)
+			cart.Positions = calculatePositionPrices(cart.Positions)
+		}
+		return carts, nil
 	default:
 		panic(err)
 	}
@@ -90,6 +95,21 @@ func (c *Cart) UpdateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 		return cart, nil
 	default:
 		panic(err)
+	}
+}
+
+func (c *Cart) loadProducts(ctx context.Context, cart *model.Cart) {
+	for i, position := range cart.Positions {
+		product, err := c.ProductRepository.FindProduct(ctx, position.ProductID)
+		switch {
+		case errors.Is(err, persistence.ErrNotFound):
+			cart.Positions[i].ProductID = ""
+			cart.Positions[i].Product = &model.Product{Name: "Product not available anymore."}
+		case err == nil:
+			cart.Positions[i].Product = product
+		default:
+			panic(err)
+		}
 	}
 }
 
