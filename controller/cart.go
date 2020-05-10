@@ -150,21 +150,10 @@ func calculatePositionPrices(positions []model.Position) []model.Position {
 	return result
 }
 
-func convertCartPositions(cartPositions []model.Position) (positions []struct {
-	ProductID string
-	Quantity  int
-	Price     int // in cents
-}) {
+func convertCartPositions(cartPositions []model.Position) map[string]int {
+	positions := make(map[string]int, len(cartPositions))
 	for _, position := range cartPositions {
-		positions = append(positions, struct {
-			ProductID string
-			Quantity  int
-			Price     int
-		}{
-			ProductID: position.ProductID,
-			Quantity:  position.Quantity,
-			Price:     position.Price,
-		})
+		positions[position.ProductID] += position.Quantity // add to any existing product
 	}
-	return
+	return positions
 }

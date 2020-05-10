@@ -41,21 +41,14 @@ type ProductRepository interface {
 type CartRepository interface {
 	// CreateCart creates a cart for the given user with the given id and
 	// positions. Id must be unique. ErrConflict is returned otherwise.
-	CreateCart(ctx context.Context, userID, id string, positions []struct {
-		ProductID string // TODO: let's see how bad of an idea inlining this really is
-		Quantity  int
-		Price     int // in cents
-	}) error
+	// Positions maps product ids to quantity.
+	CreateCart(ctx context.Context, userID, id string, positions map[string]int) error
 	// UpdateCartOfUser updates a cart of the given user with new positions. Any
 	// existing positions are replaced. ErrNotFound is returned if the cart does
 	// not exist. ErrDeleted is returned if the cart did exist but is deleted.
 	// ErrNotOwnedByUser is returned if the cart exists but it's not owned by
 	// the given user.
-	UpdateCartOfUser(ctx context.Context, userID, id string, positions []struct {
-		ProductID string
-		Quantity  int
-		Price     int // in cents
-	}) error
+	UpdateCartOfUser(ctx context.Context, userID, id string, positions map[string]int) error
 	// FindAllUnlockedCartsOfUser returns all stored carts and their positions
 	// of the given user.
 	FindAllUnlockedCartsOfUser(ctx context.Context, userID string) ([]*model.Cart, error)

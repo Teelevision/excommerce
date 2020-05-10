@@ -191,20 +191,13 @@ var _ persistence.CartRepository = (*Adapter)(nil)
 
 type cart struct {
 	userID    string
-	positions []struct {
-		ProductID string
-		Quantity  int
-		Price     int // in cents
-	}
+	positions map[string]int // maps product id to quantity
 }
 
 // CreateCart creates a cart for the given user with the given id and positions.
-// Id must be unique. ErrConflict is returned otherwise.
-func (a *Adapter) CreateCart(_ context.Context, userID, id string, positions []struct {
-	ProductID string
-	Quantity  int
-	Price     int // in cents
-}) error {
+// Id must be unique. ErrConflict is returned otherwise. Positions maps product
+// ids to quantity.
+func (a *Adapter) CreateCart(_ context.Context, userID, id string, positions map[string]int) error {
 	a.mx.Lock()
 	defer a.mx.Unlock()
 
@@ -224,11 +217,7 @@ func (a *Adapter) CreateCart(_ context.Context, userID, id string, positions []s
 // exist. ErrDeleted is returned if the cart did exist but is deleted.
 // ErrNotOwnedByUser is returned if the cart exists but it's not owned by the
 // given user.
-func (a *Adapter) UpdateCartOfUser(ctx context.Context, userID, id string, positions []struct {
-	ProductID string
-	Quantity  int
-	Price     int // in cents
-}) error {
+func (a *Adapter) UpdateCartOfUser(ctx context.Context, userID, id string, positions map[string]int) error {
 	a.mx.Lock()
 	defer a.mx.Unlock()
 
@@ -320,14 +309,13 @@ func (a *Adapter) DeleteCartOfUser(ctx context.Context, userID, id string) error
 func convertCartOut(id string, cart *cart) *model.Cart {
 	out := model.Cart{
 		ID:        id,
-		Positions: make([]model.Position, len(cart.positions)),
+		Positions: make([]model.Position, 0, len(cart.positions)),
 	}
-	for i, position := range cart.positions {
-		out.Positions[i] = model.Position{
-			ProductID: position.ProductID,
-			Quantity:  position.Quantity,
-			Price:     position.Price, // TODO: don't save the price
-		}
+	for productID, quantity := range cart.positions {
+		out.Positions = append(out.Positions, model.Position{
+			ProductID: productID,
+			Quantity:  quantity,
+		})
 	}
 	return &out
 }

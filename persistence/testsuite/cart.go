@@ -29,13 +29,9 @@ func (s *CartRepositoryTestSuite) TestCreateCart() {
 		err := r.CreateCart(ctx,
 			"0cfb6682-4279-4928-af37-30fd3e4c0b15", // user id
 			"71388209-5d1d-4ce7-a7ac-38a2e75fd67c", // id
-			[]struct {
-				ProductID string
-				Quantity  int
-				Price     int
-			}{
-				{"ce21148d-f8c8-437a-bd9c-fd72797803dd", 1, 999},
-				{"c92a017b-3e75-43d0-bb38-7f05e7d9b3c3", 999, -1},
+			map[string]int{
+				"ce21148d-f8c8-437a-bd9c-fd72797803dd": 1,
+				"c92a017b-3e75-43d0-bb38-7f05e7d9b3c3": 999,
 			}, // products
 		)
 		s.NoError(err)
@@ -68,18 +64,6 @@ func (s *CartRepositoryTestSuite) TestCreateCart() {
 		s.Require().NoError(err)
 		err = r.CreateCart(ctx, "user2", "id", nil)
 		s.True(errors.Is(err, persistence.ErrConflict))
-	})
-	s.Run("no conflict on same positions", func() {
-		r := s.NewRepository()
-		err := r.CreateCart(ctx, "user", "id", []struct {
-			ProductID string
-			Quantity  int
-			Price     int
-		}{
-			{"c7344f02-d3f6-407d-9b0d-9009eb16fcf2", 1, 100},
-			{"c7344f02-d3f6-407d-9b0d-9009eb16fcf2", 1, 100},
-		})
-		s.Require().NoError(err)
 	})
 	s.Run("no conflict on same user", func() {
 		r := s.NewRepository()
@@ -139,26 +123,18 @@ func (s *CartRepositoryTestSuite) TestUpdateCartOfUser() {
 		err := r.CreateCart(ctx,
 			"user",
 			"id",
-			[]struct {
-				ProductID string
-				Quantity  int
-				Price     int
-			}{
-				{"bb364bf5-e1fb-445d-be2d-ebad49316e0c", 1, 999},
-				{"77181602-1b4c-463c-b9a5-c2188610fd68", 999, -1},
+			map[string]int{
+				"bb364bf5-e1fb-445d-be2d-ebad49316e0c": 1,
+				"77181602-1b4c-463c-b9a5-c2188610fd68": 999,
 			}, // products
 		)
 		s.Require().NoError(err)
 		err = r.UpdateCartOfUser(ctx,
 			"user",
 			"id",
-			[]struct {
-				ProductID string
-				Quantity  int
-				Price     int
-			}{
-				{"e11c7885-92a9-4833-8e52-ed020fef5aff", 2, 234},
-				{"ff62397c-cbcf-4cd9-b57d-0a9348dd8ef4", 3, 345},
+			map[string]int{
+				"e11c7885-92a9-4833-8e52-ed020fef5aff": 2,
+				"ff62397c-cbcf-4cd9-b57d-0a9348dd8ef4": 3,
 			}, // products
 		)
 		s.Require().NoError(err)
@@ -210,13 +186,9 @@ func (s *CartRepositoryTestSuite) TestUpdateCartOfUser() {
 func (s *CartRepositoryTestSuite) TestFindAllUnlockedCartsOfUser() {
 	s.Run("finds cart with positions", func() {
 		r := s.NewRepository()
-		err := r.CreateCart(ctx, "8a0f04c7-babb-4ae6-a003-03637cb4396a", "4a33699b-afc5-41e7-b22f-3cdfca5952f8", []struct {
-			ProductID string
-			Quantity  int
-			Price     int
-		}{
-			{"eb8013e1-74ec-4c20-b57f-19d7a47c8bb0", 1, 123},
-			{"80d96241-96de-486e-a9bd-5f31dfb59405", 9, 987},
+		err := r.CreateCart(ctx, "8a0f04c7-babb-4ae6-a003-03637cb4396a", "4a33699b-afc5-41e7-b22f-3cdfca5952f8", map[string]int{
+			"eb8013e1-74ec-4c20-b57f-19d7a47c8bb0": 1,
+			"80d96241-96de-486e-a9bd-5f31dfb59405": 9,
 		})
 		s.Require().NoError(err)
 		carts, err := r.FindAllUnlockedCartsOfUser(ctx, "8a0f04c7-babb-4ae6-a003-03637cb4396a")
@@ -225,11 +197,9 @@ func (s *CartRepositoryTestSuite) TestFindAllUnlockedCartsOfUser() {
 			{
 				ProductID: "eb8013e1-74ec-4c20-b57f-19d7a47c8bb0",
 				Quantity:  1,
-				Price:     123,
 			}, {
 				ProductID: "80d96241-96de-486e-a9bd-5f31dfb59405",
 				Quantity:  9,
-				Price:     987,
 			},
 		}, carts[0].Positions)
 		carts[0].Positions = nil
@@ -240,13 +210,9 @@ func (s *CartRepositoryTestSuite) TestFindAllUnlockedCartsOfUser() {
 			},
 		}, carts)
 		s.Run("after updating it", func() {
-			err := r.UpdateCartOfUser(ctx, "8a0f04c7-babb-4ae6-a003-03637cb4396a", "4a33699b-afc5-41e7-b22f-3cdfca5952f8", []struct {
-				ProductID string
-				Quantity  int
-				Price     int
-			}{
-				{"58a89337-e6e3-4ed8-b6b8-1999f79d48d5", 5, -100}, // new one
-				{"eb8013e1-74ec-4c20-b57f-19d7a47c8bb0", 1, 123},
+			err := r.UpdateCartOfUser(ctx, "8a0f04c7-babb-4ae6-a003-03637cb4396a", "4a33699b-afc5-41e7-b22f-3cdfca5952f8", map[string]int{
+				"58a89337-e6e3-4ed8-b6b8-1999f79d48d5": 5, // new one
+				"eb8013e1-74ec-4c20-b57f-19d7a47c8bb0": 1,
 				// removed 80d96241-96de-486e-a9bd-5f31dfb59405
 			})
 			s.Require().NoError(err)
@@ -256,11 +222,9 @@ func (s *CartRepositoryTestSuite) TestFindAllUnlockedCartsOfUser() {
 				{
 					ProductID: "58a89337-e6e3-4ed8-b6b8-1999f79d48d5",
 					Quantity:  5,
-					Price:     -100,
 				}, {
 					ProductID: "eb8013e1-74ec-4c20-b57f-19d7a47c8bb0",
 					Quantity:  1,
-					Price:     123,
 				},
 			}, carts[0].Positions)
 			carts[0].Positions = nil
@@ -346,28 +310,24 @@ func (s *CartRepositoryTestSuite) TestFindAllUnlockedCartsOfUser() {
 		for _, c := range []struct {
 			id string
 			// one product:
-			productID       string
-			quantity, price int
+			productID string
+			quantity  int
 		}{
-			{"id1", "product1", 1, 123},
-			{"id2", "product2", 2, 234},
-			{"id3", "product3", 3, 345},
+			{"id1", "product1", 1},
+			{"id2", "product2", 2},
+			{"id3", "product3", 3},
 		} {
-			err := r.CreateCart(ctx, "user", c.id, []struct {
-				ProductID string
-				Quantity  int
-				Price     int
-			}{
-				{ProductID: c.productID, Quantity: c.quantity, Price: c.price},
+			err := r.CreateCart(ctx, "user", c.id, map[string]int{
+				c.productID: c.quantity,
 			})
 			s.Require().NoError(err)
 		}
 		carts, err := r.FindAllUnlockedCartsOfUser(ctx, "user")
 		s.NoError(err)
 		s.ElementsMatch([]*model.Cart{
-			{ID: "id1", Positions: []model.Position{{ProductID: "product1", Quantity: 1, Price: 123}}},
-			{ID: "id2", Positions: []model.Position{{ProductID: "product2", Quantity: 2, Price: 234}}},
-			{ID: "id3", Positions: []model.Position{{ProductID: "product3", Quantity: 3, Price: 345}}},
+			{ID: "id1", Positions: []model.Position{{ProductID: "product1", Quantity: 1}}},
+			{ID: "id2", Positions: []model.Position{{ProductID: "product2", Quantity: 2}}},
+			{ID: "id3", Positions: []model.Position{{ProductID: "product3", Quantity: 3}}},
 		}, carts)
 	})
 	s.Run("works concurrently", func() {
@@ -409,13 +369,9 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 		err := r.CreateCart(ctx,
 			"user",
 			"id",
-			[]struct {
-				ProductID string
-				Quantity  int
-				Price     int
-			}{
-				{"49dd8502-2d5a-4c71-ac50-e0affcba22c2", 1, 999},
-				{"f99a9ea1-8c0f-4e86-b778-18b2537f6234", 999, -1},
+			map[string]int{
+				"49dd8502-2d5a-4c71-ac50-e0affcba22c2": 1,
+				"f99a9ea1-8c0f-4e86-b778-18b2537f6234": 999,
 			}, // products
 		)
 		s.Require().NoError(err)
@@ -424,8 +380,8 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 		s.Equal(&model.Cart{
 			ID: "id",
 			Positions: []model.Position{
-				{ProductID: "49dd8502-2d5a-4c71-ac50-e0affcba22c2", Quantity: 1, Price: 999},
-				{ProductID: "f99a9ea1-8c0f-4e86-b778-18b2537f6234", Quantity: 999, Price: -1},
+				{ProductID: "49dd8502-2d5a-4c71-ac50-e0affcba22c2", Quantity: 1},
+				{ProductID: "f99a9ea1-8c0f-4e86-b778-18b2537f6234", Quantity: 999},
 			},
 		}, cart)
 	})
@@ -477,12 +433,8 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 		err := r.CreateCart(ctx,
 			"user",
 			"id",
-			[]struct {
-				ProductID string
-				Quantity  int
-				Price     int
-			}{
-				{"04d2c9a8-068d-40ac-acd7-7bf3f5357953", 2, 500},
+			map[string]int{
+				"04d2c9a8-068d-40ac-acd7-7bf3f5357953": 2,
 			}, // products
 		)
 		s.Require().NoError(err)
@@ -491,7 +443,7 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 		s.Require().Equal(&model.Cart{
 			ID: "id",
 			Positions: []model.Position{
-				{ProductID: "04d2c9a8-068d-40ac-acd7-7bf3f5357953", Quantity: 2, Price: 500},
+				{ProductID: "04d2c9a8-068d-40ac-acd7-7bf3f5357953", Quantity: 2},
 			},
 		}, cart)
 		// changing the result ...
@@ -505,7 +457,7 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 		s.Equal(&model.Cart{
 			ID: "id",
 			Positions: []model.Position{
-				{ProductID: "04d2c9a8-068d-40ac-acd7-7bf3f5357953", Quantity: 2, Price: 500},
+				{ProductID: "04d2c9a8-068d-40ac-acd7-7bf3f5357953", Quantity: 2},
 			},
 		}, cart)
 	})
