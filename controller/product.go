@@ -7,13 +7,13 @@ import (
 	"github.com/Teelevision/excommerce/persistence"
 )
 
-// GetProduct is the controller that gets products.
-type GetProduct struct {
+// Product is the controller that handles products.
+type Product struct {
 	ProductRepository persistence.ProductRepository
 }
 
-// All gets all products.
-func (c *GetProduct) All(ctx context.Context) ([]*model.Product, error) {
+// GetAll gets all products.
+func (c *Product) GetAll(ctx context.Context) ([]*model.Product, error) {
 	products, err := c.ProductRepository.FindAllProducts(ctx)
 	switch {
 	case err == nil:

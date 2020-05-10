@@ -9,14 +9,14 @@ import (
 	"github.com/Teelevision/excommerce/persistence"
 )
 
-// StoreCartController is the controller that stores carts.
-type StoreCartController struct {
+// Cart is the controller that handles carts.
+type Cart struct {
 	CartRepository persistence.CartRepository
 }
 
 // Create creates the given cart. ErrConflict is returned if a cart with the
 // same id already exists.
-func (c *StoreCartController) Create(ctx context.Context, cart *model.Cart) error {
+func (c *Cart) Create(ctx context.Context, cart *model.Cart) error {
 	err := c.CartRepository.CreateCart(ctx,
 		authentication.AuthenticatedUser(ctx).ID,
 		cart.ID,
@@ -35,7 +35,7 @@ func (c *StoreCartController) Create(ctx context.Context, cart *model.Cart) erro
 // Update updates the given cart. ErrNotFound is returned if the cart with the
 // same id does not exist. ErrForbidden is returned if the cart exists, but
 // updating it is not allowed for the current user.
-func (c *StoreCartController) Update(ctx context.Context, cart *model.Cart) error {
+func (c *Cart) Update(ctx context.Context, cart *model.Cart) error {
 	err := c.CartRepository.UpdateCartOfUser(ctx,
 		authentication.AuthenticatedUser(ctx).ID,
 		cart.ID,

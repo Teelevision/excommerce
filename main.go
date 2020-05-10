@@ -33,23 +33,21 @@ func main() {
 	authenticator := authentication.Authenticator{UserRepository: repo}
 
 	// controllers
-	createUserController := controller.CreateUser{UserRepository: repo}
-	getUserController := controller.GetUser{UserRepository: repo}
-	getProductController := controller.GetProduct{ProductRepository: repo}
-	storeCartController := controller.StoreCartController{CartRepository: repo}
+	userController := controller.User{UserRepository: repo}
+	productController := controller.Product{ProductRepository: repo}
+	cartController := controller.Cart{CartRepository: repo}
 
 	// apis
 	cartsAPI := &openapi.CartsAPI{
-		Authenticator:       &authenticator,
-		StoreCartController: &storeCartController,
+		Authenticator:  &authenticator,
+		CartController: &cartController,
 	}
 	ordersAPI := &openapi.OrdersAPI{}
 	productsAPI := &openapi.ProductsAPI{
-		GetProductController: &getProductController,
+		ProductController: &productController,
 	}
 	usersAPI := &openapi.UsersAPI{
-		CreateUserController: &createUserController,
-		GetUserController:    &getUserController,
+		UserController: &userController,
 	}
 
 	router := openapi.NewRouter(cartsAPI, ordersAPI, productsAPI, usersAPI)

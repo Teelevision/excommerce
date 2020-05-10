@@ -24,7 +24,7 @@ var _ Router = (*ProductsAPI)(nil)
 type ProductsAPI struct {
 	service ProductsAPIServicer
 
-	GetProductController *controller.GetProduct
+	ProductController *controller.Product
 }
 
 // Routes returns all of the api route for the ProductsApiController
@@ -47,7 +47,7 @@ func (c *ProductsAPI) Routes() Routes {
 
 // GetAllProducts - Get all products
 func (c *ProductsAPI) GetAllProducts(w http.ResponseWriter, r *http.Request) {
-	products, err := c.GetProductController.All(r.Context())
+	products, err := c.ProductController.GetAll(r.Context())
 	switch {
 	case err == nil:
 		result := make([]Product, len(products))

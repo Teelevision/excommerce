@@ -21,10 +21,9 @@ import (
 
 var _ Router = (*UsersAPI)(nil)
 
-// A UsersAPIController binds http requests to an api service and writes the service results to the http response
+// A UsersAPI binds http requests to an api service and writes the service results to the http response
 type UsersAPI struct {
-	CreateUserController *controller.CreateUser
-	GetUserController    *controller.GetUser
+	UserController *controller.User
 }
 
 // Routes returns all of the api route for the UsersApiController
@@ -54,7 +53,7 @@ func (c *UsersAPI) Login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// action
-	u, err := c.GetUserController.ByNameAndPassword(r.Context(), loginForm.Name, loginForm.Password)
+	u, err := c.UserController.GetByNameAndPassword(r.Context(), loginForm.Name, loginForm.Password)
 	switch {
 	case errors.Is(err, controller.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound) // 404
@@ -87,7 +86,7 @@ func (c *UsersAPI) Register(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// action
-	u, err := c.CreateUserController.Do(r.Context(), user.Name, user.Password)
+	u, err := c.UserController.Create(r.Context(), user.Name, user.Password)
 	switch {
 	case errors.Is(err, controller.ErrConflict):
 		w.WriteHeader(http.StatusConflict) // 409

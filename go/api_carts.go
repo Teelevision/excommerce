@@ -29,8 +29,8 @@ var _ Router = (*CartsAPI)(nil)
 type CartsAPI struct {
 	service CartsAPIServicer
 
-	Authenticator       *authentication.Authenticator
-	StoreCartController *controller.StoreCartController
+	Authenticator  *authentication.Authenticator
+	CartController *controller.Cart
 }
 
 // Routes returns all of the api route for the CartsApiController
@@ -137,10 +137,10 @@ func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	var existed bool
 	// create (or update if cart already exists)
-	err := c.StoreCartController.Create(ctx, &cart)
+	err := c.CartController.Create(ctx, &cart)
 	if errors.Is(err, controller.ErrConflict) {
 		existed = true
-		err = c.StoreCartController.Update(ctx, &cart)
+		err = c.CartController.Update(ctx, &cart)
 	}
 	switch {
 	case errors.Is(err, controller.ErrForbidden):
