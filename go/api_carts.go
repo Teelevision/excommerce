@@ -11,9 +11,15 @@ package openapi
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
+	"regexp"
 	"strings"
 
+	"github.com/Teelevision/excommerce/authentication"
+	"github.com/Teelevision/excommerce/controller"
+	"github.com/Teelevision/excommerce/model"
 	"github.com/gorilla/mux"
 )
 
@@ -22,6 +28,9 @@ var _ Router = (*CartsAPI)(nil)
 // A CartsAPI binds http requests to an api service and writes the service results to the http response
 type CartsAPI struct {
 	service CartsAPIServicer
+
+	Authenticator       *authentication.Authenticator
+	StoreCartController *controller.StoreCartController
 }
 
 // Routes returns all of the api route for the CartsApiController
@@ -49,7 +58,7 @@ func (c *CartsAPI) Routes() Routes {
 			"StoreCart",
 			strings.ToUpper("Put"),
 			"/beta/carts/{cartId}",
-			c.StoreCart,
+			c.Authenticator.Middleware(http.HandlerFunc(c.StoreCart)).ServeHTTP, // TODO: improve this
 		},
 	}
 }
@@ -95,19 +104,57 @@ func (c *CartsAPI) GetCart(w http.ResponseWriter, r *http.Request) {
 
 // StoreCart - Store a cart
 func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
+	// validation
 	params := mux.Vars(r)
 	cartID := params["cartId"]
-	cart := &Cart{}
-	if err := json.NewDecoder(r.Body).Decode(&cart); err != nil {
-		w.WriteHeader(500)
+	if !uuidPattern.Match([]byte(cartID)) {
+		invalidInput("The cartId of the path is not a UUID.", uuidPattern.String(), w)
 		return
 	}
-
-	result, err := c.service.StoreCart(cartID, *cart)
-	if err != nil {
-		w.WriteHeader(500)
+	input := &Cart{}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		invalidJSON(err, w)
 		return
 	}
+	for i, position := range input.Positions {
+		if !uuidPattern.Match([]byte(position.Product.ID)) {
+			failValidation("The product id is not a UUID.", fmt.Sprintf("/positions/%d/product/id", i), w)
+		}
+		// TODO: validate that the product exists
+	}
 
-	EncodeJSONResponse(result, nil, w)
+	// convert to internal model
+	cart := model.Cart{
+		ID:        cartID,
+		Positions: make([]model.Position, len(input.Positions)),
+	}
+	for i, position := range input.Positions {
+		cart.Positions[i].ProductID = position.Product.ID
+		cart.Positions[i].Quantity = int(position.Quantity)
+	}
+
+	// action
+	ctx := r.Context()
+	var existed bool
+	// create (or update if cart already exists)
+	err := c.StoreCartController.Create(ctx, &cart)
+	if errors.Is(err, controller.ErrConflict) {
+		existed = true
+		err = c.StoreCartController.Update(ctx, &cart)
+	}
+	switch {
+	case errors.Is(err, controller.ErrForbidden):
+		w.WriteHeader(http.StatusForbidden) // 403
+	case err == nil:
+		if existed {
+			w.WriteHeader(http.StatusOK) // 200
+		} else {
+			w.WriteHeader(http.StatusCreated) // 201
+		}
+		// TODO: return cart with computed values
+	default:
+		panic(err)
+	}
 }
+
+var uuidPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)

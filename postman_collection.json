@@ -115,6 +115,29 @@
 			"item": [
 				{
 					"name": "Get all products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c09d9d70-0b48-4b05-84f5-68935d83e01f",
+								"exec": [
+									"switch (pm.response.code) {",
+									"    case 200:",
+									"        const resp = pm.response.json();",
+									"        for (const key in pm.environment.toObject()) {",
+									"            if (key.match(/^product\\[.+\\]$/)) {",
+									"                pm.environment.unset(key);",
+									"            }",
+									"        }",
+									"        for (const product of resp) {",
+									"            pm.environment.set(`product[${product.name}]`, product.id);",
+									"        }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"auth": {
 							"type": "noauth"
@@ -135,6 +158,88 @@
 				}
 			],
 			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Carts",
+			"item": [
+				{
+					"name": "Store a cart",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "f175dad5-1698-471e-b784-f8577731c43c",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"positions\": [\n    {\n      \"quantity\": 3,\n      \"product\": {\n        \"id\": \"0061f256-d4b8-4dd3-85e3-aaaa88a050d2\"\n      }\n    }\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{HOST}}/carts/bc2db75f-8a33-45c2-87d0-88af0559e588",
+							"host": [
+								"{{HOST}}"
+							],
+							"path": [
+								"carts",
+								"bc2db75f-8a33-45c2-87d0-88af0559e588"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
+		}
+	],
+	"auth": {
+		"type": "basic",
+		"basic": [
+			{
+				"key": "username",
+				"value": "{{user.id}}",
+				"type": "string"
+			},
+			{
+				"key": "password",
+				"value": "{{user.password}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"id": "03c586cb-3545-4f65-8249-f328aa7826e2",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"id": "0eb494e9-f7b2-489f-80fa-fc816eaca147",
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
 		}
 	],
 	"protocolProfileBehavior": {}

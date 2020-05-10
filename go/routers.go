@@ -55,15 +55,19 @@ func NewRouter(routers ...Router) *mux.Router {
 	return router
 }
 
-func invalidJSON(jsonErr error, w http.ResponseWriter) {
+func invalidInput(message, details string, w http.ResponseWriter) {
 	status := http.StatusBadRequest // 400
 	err := EncodeJSONResponse(map[string]string{
-		"message": "Invalid JSON in request body.",
-		"details": jsonErr.Error(),
+		"message": message,
+		"details": details,
 	}, &status, w)
 	if err != nil {
 		panic(err)
 	}
+}
+
+func invalidJSON(jsonErr error, w http.ResponseWriter) {
+	invalidInput("Invalid JSON in request body.", jsonErr.Error(), w)
 }
 
 func failValidation(message, pointer string, w http.ResponseWriter) {

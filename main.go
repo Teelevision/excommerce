@@ -14,6 +14,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/Teelevision/excommerce/authentication"
 	"github.com/Teelevision/excommerce/controller"
 	openapi "github.com/Teelevision/excommerce/go"
 	"github.com/Teelevision/excommerce/model"
@@ -28,13 +29,20 @@ func main() {
 	repo := inmemory.NewAdapter()
 	initProducts(context.Background(), repo)
 
+	// authentication
+	authenticator := authentication.Authenticator{UserRepository: repo}
+
 	// controllers
 	createUserController := controller.CreateUser{UserRepository: repo}
 	getUserController := controller.GetUser{UserRepository: repo}
 	getProductController := controller.GetProduct{ProductRepository: repo}
+	storeCartController := controller.StoreCartController{CartRepository: repo}
 
 	// apis
-	cartsAPI := &openapi.CartsAPI{}
+	cartsAPI := &openapi.CartsAPI{
+		Authenticator:       &authenticator,
+		StoreCartController: &storeCartController,
+	}
 	ordersAPI := &openapi.OrdersAPI{}
 	productsAPI := &openapi.ProductsAPI{
 		GetProductController: &getProductController,
