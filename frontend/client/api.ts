@@ -1,3 +1,4 @@
+/* eslint-disable */
 // tslint:disable
 /**
  * ExCommerce
@@ -107,10 +108,10 @@ export interface Coupon {
     discount: number;
     /**
      * 
-     * @type {Product & object}
+     * @type {Product}
      * @memberof Coupon
      */
-    product: Product & object;
+    product: Product;
     /**
      * The time when this coupon exires. If omitted the server chooses a time in the future.
      * @type {string}
@@ -126,16 +127,16 @@ export interface Coupon {
 export interface LoginForm {
     /**
      * 
-     * @type {Name}
+     * @type {string}
      * @memberof LoginForm
      */
-    name: Name;
+    name: string;
     /**
      * 
-     * @type {Password}
+     * @type {string}
      * @memberof LoginForm
      */
-    password: Password;
+    password: string;
 }
 /**
  * The input is invalid.
@@ -194,16 +195,16 @@ export interface Order {
     recipient: Address;
     /**
      * 
-     * @type {Array<Code>}
+     * @type {Array<string>}
      * @memberof Order
      */
-    coupons?: Array<Code>;
+    coupons?: Array<string>;
     /**
      * 
-     * @type {Array<Position> & object}
+     * @type {Array<Position>}
      * @memberof Order
      */
-    positions: Array<Position> & object;
+    positions: Array<Position>;
 }
 
 /**
