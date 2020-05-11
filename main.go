@@ -20,6 +20,7 @@ import (
 	"github.com/Teelevision/excommerce/model"
 	"github.com/Teelevision/excommerce/persistence"
 	"github.com/Teelevision/excommerce/persistence/inmemory"
+	"github.com/gorilla/handlers"
 )
 
 func main() {
@@ -53,7 +54,7 @@ func main() {
 
 	router := openapi.NewRouter(cartsAPI, ordersAPI, productsAPI, usersAPI)
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":8080", handlers.CORS()(router)))
 }
 
 func initProducts(ctx context.Context, r persistence.ProductRepository) {
