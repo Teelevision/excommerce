@@ -1,5 +1,5 @@
-export default class Product {
-    ID?: string
-    Name!: string
-    Price?: number
+export class Product {
+  id?: string
+  name!: string
+  price?: number
 }

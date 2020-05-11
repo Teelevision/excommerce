@@ -1,18 +1,46 @@
 import { Store, ActionTree, ActionContext } from 'vuex'
-import Product from '~/models/product'
+import { Product, Cart, Position } from '~/models'
 import { ProductsApi } from '~/client'
 
 interface State {
   products: Product[]
+  cart: Cart
 }
 
 export const state: () => State = () => ({
-  products: []
+  products: [],
+  cart: new Cart()
 })
 
 export const mutations = {
   allProductsLoaded(state: State, products: Product[]) {
     state.products = products
+  },
+  updateCartPositions(state: State, positions: Position[]) {
+    const products: { [key: string]: Position } = {}
+    for (const { productId, quantity } of positions) {
+      if (productId === undefined) {
+        continue
+      }
+      let product = products[productId]
+      if (product === undefined) {
+        product = { quantity: 0, productId }
+      }
+      product.quantity += quantity
+      product.price = 0
+      products[productId] = product
+    }
+    positions = []
+    for (const product of Object.values(products)) {
+      positions.push(product)
+    }
+    state.cart.positions = positions
+  },
+  addProductToCart(state: State, productId: string) {
+    mutations.updateCartPositions(state, [
+      ...state.cart.positions,
+      { productId, quantity: 1 }
+    ])
   }
 }
 
@@ -21,15 +49,11 @@ export const actions = <ActionTreeMutations>{
     const api = new ProductsApi()
     commit(
       'allProductsLoaded',
-      await api
-        .getAllProducts()
-        .then((resp) => resp.data)
-        .then((products) =>
-          products.map(
-            (p) => <Product>{ ID: p.id, Name: p.name, Price: p.price }
-          )
-        )
+      await api.getAllProducts().then((resp) => resp.data)
     )
+  },
+  addToCart({ commit }, productId: string) {
+    commit('addProductToCart', productId)
   }
 }
 
