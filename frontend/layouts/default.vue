@@ -1,13 +1,19 @@
 <template>
   <v-app dark>
     <v-app-bar fixed app>
-      <v-toolbar-title v-text="title" />
+      <v-toolbar-title>
+        <nuxt-link to="/" style="color: white; text-decoration: none;">{{
+          title
+        }}</nuxt-link>
+      </v-toolbar-title>
       <v-spacer />
-      <v-btn icon>
-        <v-badge :content="cartSize" bottom left :value="cartSize > 0">
-          <v-icon>mdi-cart</v-icon>
-        </v-badge>
-      </v-btn>
+      <nuxt-link to="/cart" style="text-decoration: none;">
+        <v-btn icon>
+          <v-badge :content="cartSize" bottom left :value="cartSize > 0">
+            <v-icon>mdi-cart</v-icon>
+          </v-badge>
+        </v-btn>
+      </nuxt-link>
     </v-app-bar>
     <v-content>
       <v-container>

@@ -10,8 +10,9 @@
               </v-img>
               <v-card-actions>
                 <v-spacer></v-spacer>
-                <v-btn icon @click="addToCart(product.id)">
-                  <v-icon>mdi-cart-plus</v-icon>
+                <v-btn color="primary" @click="addToCart(product.id)">
+                  <v-icon left>mdi-cart-plus</v-icon>
+                  {{ product.price }} EUR
                 </v-btn>
               </v-card-actions>
             </v-card>

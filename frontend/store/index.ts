@@ -32,6 +32,7 @@ export const mutations = {
     }
     positions = []
     for (const product of Object.values(products)) {
+      if (product.quantity <= 0) continue
       positions.push(product)
     }
     state.cart.positions = positions
@@ -51,6 +52,9 @@ export const actions = <ActionTreeMutations>{
       'allProductsLoaded',
       await api.getAllProducts().then((resp) => resp.data)
     )
+  },
+  updateCartPositions({ commit }, positions: Position[]) {
+    commit('updateCartPositions', positions)
   },
   addToCart({ commit }, productId: string) {
     commit('addProductToCart', productId)
