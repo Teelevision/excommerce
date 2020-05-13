@@ -1,16 +1,20 @@
 import { Store, ActionTree, ActionContext } from 'vuex'
-import { Product, Cart, Position } from '~/models'
-import { ProductsApi } from '~/client'
+import { Product, Cart, Position, User } from '~/models'
+import { ProductsApi, UsersApi } from '~/client'
 
 interface State {
   products: Product[]
   cart: Cart
+  user: User
 }
 
 export const state: () => State = () => ({
   products: [],
-  cart: new Cart()
+  cart: new Cart(),
+  user: new User('', '')
 })
+
+const initialState = state
 
 export const mutations = {
   allProductsLoaded(state: State, products: Product[]) {
@@ -42,6 +46,13 @@ export const mutations = {
       ...state.cart.positions,
       { productId, quantity: 1 }
     ])
+  },
+  loggedIn(state: State, user: User) {
+    state.user = user
+  },
+  loggedOut(state: State) {
+    state.user = initialState().user
+    state.cart = initialState().cart
   }
 }
 
@@ -58,6 +69,13 @@ export const actions = <ActionTreeMutations>{
   },
   addToCart({ commit }, productId: string) {
     commit('addProductToCart', productId)
+  },
+  async login({ commit }, user: User) {
+    const resp = await new UsersApi().login(user)
+    return commit('loggedIn', { ...user, id: resp.data.id })
+  },
+  logout({ commit }) {
+    commit('loggedOut')
   }
 }
 
