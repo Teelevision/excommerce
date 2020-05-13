@@ -34,7 +34,12 @@
             EUR {{ position.product.price.toFixed(2) }}
           </v-col>
           <v-col cols="12" sm="3" md="2" style="text-align: right;">
-            EUR {{ (position.product.price * quantity[i]).toFixed(2) }}
+            EUR
+            {{
+              (position.price || position.product.price * quantity[i]).toFixed(
+                2
+              )
+            }}
           </v-col>
           <v-col cols="12" sm="3" md="2">
             <v-text-field
@@ -66,7 +71,10 @@
             EUR
             {{
               positions
-                .reduce((prev, p) => prev + p.product.price * p.quantity, 0)
+                .reduce(
+                  (prev, p) => prev + (p.price || p.product.price * p.quantity),
+                  0
+                )
                 .toFixed(2)
             }}
           </v-col>
@@ -87,11 +95,10 @@ export default {
     positions: ({ cart, products }) =>
       cart.positions.map((p) => ({
         ...p,
-        product: Object.values(products).find(
-          (pr) => pr.id === p.productId
-        ) || {
-          name: 'unknown'
-        }
+        product: p.product ||
+          Object.values(products).find((pr) => pr.id === p.productId) || {
+            name: 'unknown'
+          }
       }))
   }),
   mounted() {

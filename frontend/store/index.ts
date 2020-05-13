@@ -1,6 +1,7 @@
 import { Store, ActionTree, ActionContext } from 'vuex'
+import { v4 as uuidv4 } from 'uuid'
 import { Product, Cart, Position, User } from '~/models'
-import { ProductsApi, UsersApi } from '~/client'
+import { ProductsApi, UsersApi, CartsApi, Configuration } from '~/client'
 
 interface State {
   products: Product[]
@@ -19,6 +20,9 @@ const initialState = state
 export const mutations = {
   allProductsLoaded(state: State, products: Product[]) {
     state.products = products
+  },
+  updateCart(state: State, cart: Cart) {
+    state.cart = cart
   },
   updateCartPositions(state: State, positions: Position[]) {
     const products: { [key: string]: Position } = {}
@@ -64,18 +68,50 @@ export const actions = <ActionTreeMutations>{
       await api.getAllProducts().then((resp) => resp.data)
     )
   },
-  updateCartPositions({ commit }, positions: Position[]) {
+  updateCartPositions({ commit, dispatch }, positions: Position[]) {
     commit('updateCartPositions', positions)
+    dispatch('storeCartOnServer')
   },
-  addToCart({ commit }, productId: string) {
+  addToCart({ commit, dispatch }, productId: string) {
     commit('addProductToCart', productId)
+    dispatch('storeCartOnServer')
   },
-  async login({ commit }, user: User) {
+  async login({ commit, dispatch }, user: User) {
     const resp = await new UsersApi().login(user)
-    return commit('loggedIn', { ...user, id: resp.data.id })
+    commit('loggedIn', { ...user, id: resp.data.id })
+    dispatch('storeCartOnServer')
   },
   logout({ commit }) {
     commit('loggedOut')
+  },
+  async storeCartOnServer({ commit, state: { cart, user } }) {
+    if (!user.id) {
+      return
+    }
+    const uuid = cart.id || uuidv4()
+    const {
+      data: { id, positions }
+    } = await new CartsApi(
+      new Configuration({ username: user.id, password: user.password })
+    ).storeCart(uuid, {
+      id: uuid,
+      positions: cart.positions
+        .filter(({ productId }) => productId !== undefined)
+        .map(({ quantity, productId }) => ({
+          quantity,
+          product: { id: productId || '', name: '' },
+          price: 0
+        }))
+    })
+    commit('updateCart', {
+      id,
+      positions: positions.map(({ quantity, product, price }) => ({
+        quantity,
+        product,
+        price,
+        productId: product.id
+      }))
+    })
   }
 }
 
