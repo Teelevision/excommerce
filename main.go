@@ -54,7 +54,12 @@ func main() {
 
 	router := openapi.NewRouter(cartsAPI, ordersAPI, productsAPI, usersAPI)
 
-	log.Fatal(http.ListenAndServe(":8080", handlers.CORS()(router)))
+	log.Fatal(http.ListenAndServe(":8080",
+		handlers.CORS(
+			handlers.AllowedOrigins([]string{"http://localhost:3000"}),
+			handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"}),
+			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"}),
+		)(router)))
 }
 
 func initProducts(ctx context.Context, r persistence.ProductRepository) {
