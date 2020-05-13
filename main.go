@@ -58,7 +58,7 @@ func main() {
 		handlers.CORS(
 			handlers.AllowedOrigins([]string{"http://localhost:3000"}),
 			handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"}),
-			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type"}),
+			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
 		)(router)))
 }
 
