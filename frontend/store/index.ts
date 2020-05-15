@@ -79,10 +79,17 @@ export const actions = <ActionTreeMutations>{
   async login({ commit, dispatch }, user: User) {
     const resp = await new UsersApi().login(user)
     commit('loggedIn', { ...user, id: resp.data.id })
-    dispatch('storeCartOnServer')
+    dispatch('syncCart')
   },
   logout({ commit }) {
     commit('loggedOut')
+  },
+  syncCart({ dispatch, state }) {
+    if (state.cart.positions.length) {
+      dispatch('storeCartOnServer')
+    } else {
+      dispatch('loadCartFromServer')
+    }
   },
   async storeCartOnServer({ commit, state: { cart, user } }) {
     if (!user.id) {
@@ -112,6 +119,25 @@ export const actions = <ActionTreeMutations>{
         productId: product.id
       }))
     })
+  },
+  async loadCartFromServer({ commit, state: { user } }) {
+    const { data: carts } = await new CartsApi(
+      new Configuration({ username: user.id, password: user.password })
+    ).getAllCarts(false)
+    for (const cart of carts) {
+      if (!cart.positions.length) {
+        continue
+      }
+      commit('updateCart', {
+        id: cart.id,
+        positions: cart.positions.map(({ quantity, product, price }) => ({
+          quantity,
+          product,
+          price,
+          productId: product.id
+        }))
+      })
+    }
   }
 }
 
