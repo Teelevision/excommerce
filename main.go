@@ -54,6 +54,10 @@ func main() {
 
 	router := openapi.NewRouter(cartsAPI, ordersAPI, productsAPI, usersAPI)
 
+	// serve static files
+	router.PathPrefix("/beta/static/").
+		Handler(http.StripPrefix("/beta/static/", http.FileServer(http.Dir("./static/"))))
+
 	log.Fatal(http.ListenAndServe(":8080",
 		handlers.CORS(
 			handlers.AllowedOrigins([]string{"http://localhost:3000"}),

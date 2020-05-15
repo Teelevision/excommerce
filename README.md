@@ -102,3 +102,12 @@ Guest orders a product:
 |                      |     |                      |     |                      |
 +----------------------+     +----------------------+     +----------------------+
 ```
+
+## Attribution
+
+Images used:
+
+* Orange by [Marcos Ramírez](https://unsplash.com/@marcosramirez_x?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/s/photos/orange?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText)
+* Pear by [Amirul Islam](https://unsplash.com/@picturedesign96?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/s/photos/pear?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText)
+* Apple by [Louis Hansel @shotsoflouis](https://unsplash.com/@louishansel?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/s/photos/apple?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText)
+* Banana by [Mike Dorner](https://unsplash.com/@dorner?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText) on [Unsplash](https://unsplash.com/s/photos/banana?utm_source=unsplash&utm_medium=referral&utm_content=creditCopyText)

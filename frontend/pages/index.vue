@@ -6,7 +6,10 @@
           <v-col v-for="product in products" :key="product.id" cols="6">
             <v-card>
               <v-img :src="product.img" max-height="300px" max-width="500px">
-                <v-card-title v-text="product.name"></v-card-title>
+                <v-card-title
+                  style="color: rgba(0, 0, 0, 0.87);"
+                  v-text="product.name"
+                ></v-card-title>
               </v-img>
               <v-card-actions>
                 <v-spacer></v-spacer>
@@ -25,13 +28,14 @@
 
 <script>
 import { mapState, mapActions } from 'vuex'
+import { BASE_PATH } from '~/client/base'
 
 export default {
   computed: mapState({
     products: (state) =>
       state.products.map((p) => ({
         ...p,
-        img: 'https://picsum.photos/seed/' + p.name + '/500/300'
+        img: BASE_PATH + '/static/products/' + p.id + '.jpg'
       }))
   }),
   mounted() {
