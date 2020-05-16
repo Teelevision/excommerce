@@ -138,6 +138,7 @@ export const actions = <ActionTreeMutations>{
           productId: product.id
         }))
       })
+      break
     }
   }
 }
@@ -178,5 +179,8 @@ export const plugins = [
   createPersistedState({
     paths: ['user'],
     storage: sessionStorage
+  }),
+  createPersistedState({
+    paths: ['cart']
   })
 ]
