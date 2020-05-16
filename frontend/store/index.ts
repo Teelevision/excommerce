@@ -1,4 +1,5 @@
 import { Store, ActionTree, ActionContext } from 'vuex'
+import createPersistedState from 'vuex-persistedstate'
 import { v4 as uuidv4 } from 'uuid'
 import { Product, Cart, Position, User } from '~/models'
 import { ProductsApi, UsersApi, CartsApi, Configuration } from '~/client'
@@ -170,3 +171,12 @@ interface CommitMutation {
     options?: any
   ): void
 }
+
+// plugins
+
+export const plugins = [
+  createPersistedState({
+    paths: ['user'],
+    storage: sessionStorage
+  })
+]

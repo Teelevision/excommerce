@@ -27,7 +27,8 @@
     "@types/uuid": "^7.0.3",
     "axios": "^0.19.2",
     "nuxt": "^2.0.0",
-    "uuid": "^8.0.0"
+    "uuid": "^8.0.0",
+    "vuex-persistedstate": "^3.0.1"
   },
   "devDependencies": {
     "@ava/babel": "^1.0.0",

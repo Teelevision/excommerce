@@ -32,3 +32,8 @@ frontend:
 	docker run -it --rm -p 127.0.0.1:3000:3000/tcp \
 		-v ${PWD}/frontend:/app --workdir=/app \
 		node:14.2.0-stretch yarn dev
+
+frontend-shell:
+	docker run -it --rm \
+		-v ${PWD}/frontend:/app --workdir=/app \
+		node:14.2.0-stretch bash
