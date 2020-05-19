@@ -28,6 +28,7 @@ func main() {
 
 	// persistence
 	repo := inmemory.NewAdapter()
+	initAdmin(context.Background(), repo)
 	initProducts(context.Background(), repo)
 
 	// authentication
@@ -64,6 +65,13 @@ func main() {
 			handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"}),
 			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
 		)(router)))
+}
+
+func initAdmin(ctx context.Context, r persistence.UserRepository) {
+	err := r.CreateUser(ctx, "6de47f66-15d1-4e95-b41f-9b17d49ce898", "admin", "admin")
+	if err != nil {
+		panic(err)
+	}
 }
 
 func initProducts(ctx context.Context, r persistence.ProductRepository) {
