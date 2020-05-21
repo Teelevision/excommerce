@@ -93,7 +93,7 @@ paths:
         5XX:
           $ref: "#/components/responses/5XX"
 
-  /products/{productId}/coupon/{couponCode}:
+  /products/{productId}/coupons/{couponCode}:
     parameters:
       - $ref: '#/components/parameters/productId'
       - $ref: '#/components/parameters/couponCode'

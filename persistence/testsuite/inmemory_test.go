@@ -34,4 +34,12 @@ func TestReferenceImplementation(t *testing.T) {
 		}
 		suite.RunSuite(t)
 	}
+	{ // coupon
+		suite := &testsuite.CouponRepositoryTestSuite{
+			NewRepository: func() persistence.CouponRepository {
+				return inmemory.NewAdapter()
+			},
+		}
+		suite.RunSuite(t)
+	}
 }

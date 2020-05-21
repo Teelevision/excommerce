@@ -915,7 +915,7 @@ export const ProductsApiAxiosParamCreator = function (configuration?: Configurat
             if (coupon === null || coupon === undefined) {
                 throw new RequiredError('coupon','Required parameter coupon was null or undefined when calling storeCouponForProduct.');
             }
-            const localVarPath = `/products/{productId}/coupon/{couponCode}`
+            const localVarPath = `/products/{productId}/coupons/{couponCode}`
                 .replace(`{${"productId"}}`, encodeURIComponent(String(productId)))
                 .replace(`{${"couponCode"}}`, encodeURIComponent(String(couponCode)));
             const localVarUrlObj = globalImportUrl.parse(localVarPath, true);

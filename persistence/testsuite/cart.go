@@ -421,12 +421,13 @@ func (s *CartRepositoryTestSuite) TestFindCartOfUser() {
 		s.Require().NoError(err)
 		cart, err := r.FindCartOfUser(ctx, "user", "id")
 		s.NoError(err)
+		s.ElementsMatch([]model.Position{
+			{ProductID: "49dd8502-2d5a-4c71-ac50-e0affcba22c2", Quantity: 1},
+			{ProductID: "f99a9ea1-8c0f-4e86-b778-18b2537f6234", Quantity: 999},
+		}, cart.Positions)
+		cart.Positions = nil
 		s.Equal(&model.Cart{
 			ID: "id",
-			Positions: []model.Position{
-				{ProductID: "49dd8502-2d5a-4c71-ac50-e0affcba22c2", Quantity: 1},
-				{ProductID: "f99a9ea1-8c0f-4e86-b778-18b2537f6234", Quantity: 999},
-			},
 		}, cart)
 	})
 	s.Run("user is case-sensitive", func() {

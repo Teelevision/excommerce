@@ -34,3 +34,12 @@ func TestAdapterImplementsCartRepository(t *testing.T) {
 	}
 	suite.RunSuite(t)
 }
+
+func TestAdapterImplementsCouponRepository(t *testing.T) {
+	suite := &testsuite.CouponRepositoryTestSuite{
+		NewRepository: func() persistence.CouponRepository {
+			return inmemory.NewAdapter()
+		},
+	}
+	suite.RunSuite(t)
+}

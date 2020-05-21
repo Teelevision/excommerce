@@ -11,10 +11,15 @@ package openapi
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"strings"
+	"time"
+	"unicode/utf8"
 
+	"github.com/Teelevision/excommerce/authentication"
 	"github.com/Teelevision/excommerce/controller"
+	"github.com/Teelevision/excommerce/model"
 	"github.com/gorilla/mux"
 )
 
@@ -22,8 +27,7 @@ var _ Router = (*ProductsAPI)(nil)
 
 // A ProductsAPI binds http requests to an api service and writes the service results to the http response
 type ProductsAPI struct {
-	service ProductsAPIServicer
-
+	Authenticator     *authentication.Authenticator
 	ProductController *controller.Product
 }
 
@@ -39,8 +43,8 @@ func (c *ProductsAPI) Routes() Routes {
 		{
 			"StoreCouponForProduct",
 			strings.ToUpper("Put"),
-			"/beta/products/{productId}/coupon/{couponCode}",
-			c.StoreCouponForProduct,
+			"/beta/products/{productId}/coupons/{couponCode}",
+			c.Authenticator.HandlerFunc(c.StoreCouponForProduct),
 		},
 	}
 }
@@ -64,20 +68,79 @@ func (c *ProductsAPI) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 
 // StoreCouponForProduct - Create product coupon
 func (c *ProductsAPI) StoreCouponForProduct(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// check that the user is the admin
+	user := authentication.AuthenticatedUser(ctx)
+	if user.Name != "admin" {
+		w.WriteHeader(http.StatusForbidden) // 403
+		return
+	}
+
+	// input
 	params := mux.Vars(r)
 	productID := params["productId"]
-	couponCode := params["couponCode"]
+	couponCode := strings.ToLower(params["couponCode"])
 	coupon := &Coupon{}
 	if err := json.NewDecoder(r.Body).Decode(&coupon); err != nil {
 		w.WriteHeader(500)
 		return
 	}
 
-	result, err := c.service.StoreCouponForProduct(productID, couponCode, *coupon)
-	if err != nil {
-		w.WriteHeader(500)
+	// validation
+	if !uuidPattern.Match([]byte(productID)) {
+		invalidInput("The productId of the path is not a UUID.", uuidPattern.String(), w)
+		return
+	}
+	if l := utf8.RuneCountInString(couponCode); l < 6 || l > 40 {
+		invalidInput("The coupon code must be 6 to 40 characters long.", "", w)
+		return
+	}
+	if l := utf8.RuneCountInString(coupon.Name); l < 1 || l > 100 {
+		failValidation("The name must be 1 to 100 characters long.", "/name", w)
+		return
+	}
+	if coupon.Discount < 1 || coupon.Discount > 100 {
+		failValidation("The discount must be any integer from 1 to 100.", "/discount", w)
 		return
 	}
 
-	EncodeJSONResponse(result, nil, w)
+	// convert to internal model
+	couponInput := model.Coupon{
+		Code:      couponCode,
+		ProductID: productID,
+		Name:      coupon.Name,
+		Discount:  int(coupon.Discount),
+		ExpiresAt: coupon.ExpiresAt,
+	}
+	// load product
+	product, err := c.ProductController.Get(ctx, couponInput.ProductID)
+	switch {
+	case errors.Is(err, controller.ErrNotFound):
+		w.WriteHeader(http.StatusNotFound) // 404
+		return
+	case err == nil:
+		couponInput.Product = product
+	default:
+		panic(err)
+	}
+
+	// action
+	couponOutput, err := c.ProductController.SaveCoupon(ctx, &couponInput)
+	switch {
+	case err == nil:
+		EncodeJSONResponse(&Coupon{
+			Code:      couponOutput.Code,
+			Name:      couponOutput.Name,
+			Discount:  int32(couponOutput.Discount),
+			ExpiresAt: couponOutput.ExpiresAt.UTC().Truncate(time.Second),
+			Product: Product{
+				ID:    couponOutput.Product.ID,
+				Name:  couponOutput.Product.Name,
+				Price: float32(couponOutput.Product.Price) / 100,
+			},
+		}, nil, w)
+	default:
+		panic(err)
+	}
 }

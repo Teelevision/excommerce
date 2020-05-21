@@ -155,6 +155,51 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Create product coupon",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"id": "c09d9d70-0b48-4b05-84f5-68935d83e01f",
+								"exec": [
+									"switch (pm.response.code) {",
+									"    case 200:",
+									"        const resp = pm.response.json();",
+									"        pm.environment.set('coupon', resp.code.toUpperCase());",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"30% off oranges\",\n  \"discount\": 30,\n  \"expiresAt\": \"2022-02-22T12:22:22Z\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{HOST}}/products/{{product[Orange]}}/coupons/ORANGE30",
+							"host": [
+								"{{HOST}}"
+							],
+							"path": [
+								"products",
+								"{{product[Orange]}}",
+								"coupons",
+								"ORANGE30"
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"protocolProfileBehavior": {}

@@ -3,6 +3,7 @@ package inmemory
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/Teelevision/excommerce/model"
 	"github.com/Teelevision/excommerce/persistence"
@@ -15,10 +16,11 @@ import (
 type Adapter struct {
 	mx sync.Mutex
 
-	usersByID    map[string]*user
-	usersByName  map[string]*user
-	productsByID map[string]*product
-	cartsByID    map[string]*cart
+	usersByID     map[string]*user
+	usersByName   map[string]*user
+	productsByID  map[string]*product
+	cartsByID     map[string]*cart
+	couponsByCode map[string]*coupon
 
 	bcryptCost int
 }
@@ -38,10 +40,11 @@ func FastLessSecureHashingForTesting() Option {
 // NewAdapter returns a new in-memory adapter.
 func NewAdapter(options ...Option) *Adapter {
 	a := Adapter{
-		usersByID:    make(map[string]*user),
-		usersByName:  make(map[string]*user),
-		productsByID: make(map[string]*product),
-		cartsByID:    make(map[string]*cart),
+		usersByID:     make(map[string]*user),
+		usersByName:   make(map[string]*user),
+		productsByID:  make(map[string]*product),
+		cartsByID:     make(map[string]*cart),
+		couponsByCode: make(map[string]*coupon),
 	}
 	for _, option := range options {
 		option(&a)
@@ -325,4 +328,59 @@ func convertCartOut(id string, cart *cart) *model.Cart {
 		})
 	}
 	return &out
+}
+
+var _ persistence.CouponRepository = (*Adapter)(nil)
+
+type coupon struct {
+	name      string
+	productID string
+	discount  int
+	expiresAt time.Time
+}
+
+// StoreCoupon stores a coupon with the given code, name, product id, discount
+// in percent and expires at time. If a coupon with the same code was previously
+// stored it is overwritten.
+func (a *Adapter) StoreCoupon(ctx context.Context, code string, name string, productID string, discount int, expiresAt time.Time) error {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	// clean up expired coupons
+	for code, coupon := range a.couponsByCode {
+		if coupon.expiresAt.Before(time.Now()) {
+			delete(a.couponsByCode, code)
+		}
+	}
+
+	// add new coupon
+	a.couponsByCode[code] = &coupon{
+		name:      name,
+		productID: productID,
+		discount:  discount,
+		expiresAt: expiresAt,
+	}
+
+	return nil
+}
+
+// FindValidCoupon returns the coupon with the given code that is not expired.
+// ErrNotFound is returned if there is no coupon with the code or the coupon is
+// expired.
+func (a *Adapter) FindValidCoupon(ctx context.Context, code string) (*model.Coupon, error) {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	coupon, ok := a.couponsByCode[code]
+	if !ok || coupon.expiresAt.Before(time.Now()) {
+		return nil, persistence.ErrNotFound
+	}
+
+	return &model.Coupon{
+		Code:      code,
+		Name:      coupon.name,
+		ProductID: coupon.productID,
+		Discount:  coupon.discount,
+		ExpiresAt: coupon.expiresAt,
+	}, nil
 }

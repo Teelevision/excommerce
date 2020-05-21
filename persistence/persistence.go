@@ -2,6 +2,7 @@ package persistence
 
 import (
 	"context"
+	"time"
 
 	"github.com/Teelevision/excommerce/model"
 )
@@ -62,4 +63,16 @@ type CartRepository interface {
 	// is returned if the cart did exist but is deleted. ErrNotOwnedByUser is
 	// returned if the cart exists but it's not owned by the given user.
 	DeleteCartOfUser(ctx context.Context, userID, id string) error
+}
+
+// CouponRepository stores and loads coupons. It is safe for concurrent use.
+type CouponRepository interface {
+	// StoreCoupon stores a coupon with the given code, name, product id,
+	// discount in percent and expires at time. If a coupon with the same code
+	// was previously stored it is overwritten.
+	StoreCoupon(ctx context.Context, code, name, productID string, discount int, expiresAt time.Time) error
+	// FindValidCoupon returns the coupon with the given code that is not
+	// expired. ErrNotFound is returned if there is no coupon with the code or
+	// the coupon is expired.
+	FindValidCoupon(ctx context.Context, code string) (*model.Coupon, error)
 }

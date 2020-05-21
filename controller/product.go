@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Teelevision/excommerce/model"
 	"github.com/Teelevision/excommerce/persistence"
@@ -11,6 +12,7 @@ import (
 // Product is the controller that handles products.
 type Product struct {
 	ProductRepository persistence.ProductRepository
+	CouponRepository  persistence.CouponRepository
 }
 
 // GetAll gets all products.
@@ -37,6 +39,24 @@ func (c *Product) Get(ctx context.Context, productID string) (*model.Product, er
 			Name:  product.Name,
 			Price: product.Price,
 		}, nil
+	default:
+		panic(err)
+	}
+}
+
+// SaveCoupon creates or updates the given coupon. The coupon's code is expected
+// to be 6 to 40 runes long, and the coupon's name 1 to 100. The coupon's
+// product is expected to exist and the coupon's discount is expected to be
+// between 1 and 100. On success the coupon is returned.
+func (c *Product) SaveCoupon(ctx context.Context, coupon *model.Coupon) (*model.Coupon, error) {
+	if coupon.ExpiresAt.IsZero() {
+		coupon.ExpiresAt = time.Now().Add(10 * time.Second) // TODO: make configurable
+	}
+
+	err := c.CouponRepository.StoreCoupon(ctx, coupon.Code, coupon.Name, coupon.Product.ID, coupon.Discount, coupon.ExpiresAt)
+	switch {
+	case err == nil:
+		return coupon, nil
 	default:
 		panic(err)
 	}
