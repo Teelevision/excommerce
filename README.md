@@ -13,6 +13,12 @@ Example Commerce System
 * Start the server build on `localhost:8080`: `make run`
 * Start api doc server on [localhost:8081](http://localhost:8081/): `make redoc`
 
+### Configuration via environment variables
+
+* `COUPON_DEFAULT_LIFETIME`: The default lifetime when creating a coupon and no
+  expires at date is given. Use values like `10s`, `2.5m` or `1h30m` to express
+  a duration. Defaults to `10s`.
+
 ## Frontend
 
 * Run the dev frontend on [localhost:3000](http://localhost:3000/): `make frontend`

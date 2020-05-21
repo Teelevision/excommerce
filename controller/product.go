@@ -5,6 +5,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/Teelevision/excommerce/config"
 	"github.com/Teelevision/excommerce/model"
 	"github.com/Teelevision/excommerce/persistence"
 )
@@ -50,7 +51,7 @@ func (c *Product) Get(ctx context.Context, productID string) (*model.Product, er
 // between 1 and 100. On success the coupon is returned.
 func (c *Product) SaveCoupon(ctx context.Context, coupon *model.Coupon) (*model.Coupon, error) {
 	if coupon.ExpiresAt.IsZero() {
-		coupon.ExpiresAt = time.Now().Add(10 * time.Second) // TODO: make configurable
+		coupon.ExpiresAt = time.Now().Add(config.CouponDefaultLifetime)
 	}
 
 	err := c.CouponRepository.StoreCoupon(ctx, coupon.Code, coupon.Name, coupon.Product.ID, coupon.Discount, coupon.ExpiresAt)
