@@ -76,3 +76,38 @@ type CouponRepository interface {
 	// the coupon is expired.
 	FindValidCoupon(ctx context.Context, code string) (*model.Coupon, error)
 }
+
+// OrderRepository stores and loads orders. It is safe for concurrent use.
+type OrderRepository interface {
+	// CreateOrder creates an order for the given user with the given id and
+	// attributes. Id must be unique. ErrConflict is returned otherwise.
+	CreateOrder(ctx context.Context, userID, id string, attributes OrderAttributes) error
+	// FindOrderOfUser returns the order of the given user with the given id.
+	// ErrNotFound is returned if there is no order with the id. ErrDeleted is
+	// returned if the order did exist but is deleted. ErrNotOwnedByUser is
+	// returned if the order exists but it's not owned by the given user.
+	FindOrderOfUser(ctx context.Context, userID, id string) (*model.Order, error)
+	// DeleteOrderOfUser deletes the order of the given user with the given id.
+	// ErrNotFound is returned if there is no order with the id. ErrDeleted is
+	// returned if the order did exist but is deleted. ErrNotOwnedByUser is
+	// returned if the order exists but it's not owned by the given user.
+	DeleteOrderOfUser(ctx context.Context, userID, id string) error
+}
+
+// OrderAttributes are common attributes of an order.
+type OrderAttributes struct {
+	CartID      string
+	CartVersion int
+	Buyer       OrderAddress
+	Recipient   OrderAddress
+	Coupons     []string
+}
+
+// OrderAddress is an address used in orders.
+type OrderAddress struct {
+	Name       string
+	Country    string
+	PostalCode string
+	City       string
+	Street     string
+}

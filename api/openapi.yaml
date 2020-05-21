@@ -677,7 +677,7 @@ components:
         postalCode:
           type: string
           description: The postal code code.
-          example: 10557
+          example: "10557"
         city:
           type: string
           description: The city.

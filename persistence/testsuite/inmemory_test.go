@@ -42,4 +42,12 @@ func TestReferenceImplementation(t *testing.T) {
 		}
 		suite.RunSuite(t)
 	}
+	{ // order
+		suite := &testsuite.OrderRepositoryTestSuite{
+			NewRepository: func() persistence.OrderRepository {
+				return inmemory.NewAdapter()
+			},
+		}
+		suite.RunSuite(t)
+	}
 }

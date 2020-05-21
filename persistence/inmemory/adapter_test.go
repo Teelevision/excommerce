@@ -43,3 +43,12 @@ func TestAdapterImplementsCouponRepository(t *testing.T) {
 	}
 	suite.RunSuite(t)
 }
+
+func TestAdapterImplementsOrderRepository(t *testing.T) {
+	suite := &testsuite.OrderRepositoryTestSuite{
+		NewRepository: func() persistence.OrderRepository {
+			return inmemory.NewAdapter()
+		},
+	}
+	suite.RunSuite(t)
+}

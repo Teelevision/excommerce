@@ -21,6 +21,7 @@ type Adapter struct {
 	productsByID  map[string]*product
 	cartsByID     map[string]*cart
 	couponsByCode map[string]*coupon
+	ordersByID    map[string]*order
 
 	bcryptCost int
 }
@@ -45,6 +46,7 @@ func NewAdapter(options ...Option) *Adapter {
 		productsByID:  make(map[string]*product),
 		cartsByID:     make(map[string]*cart),
 		couponsByCode: make(map[string]*coupon),
+		ordersByID:    make(map[string]*order),
 	}
 	for _, option := range options {
 		option(&a)
@@ -383,4 +385,104 @@ func (a *Adapter) FindValidCoupon(ctx context.Context, code string) (*model.Coup
 		Discount:  coupon.discount,
 		ExpiresAt: coupon.expiresAt,
 	}, nil
+}
+
+var _ persistence.OrderRepository = (*Adapter)(nil)
+
+type order struct {
+	userID      string
+	cartID      string
+	cartVersion int
+	buyer       orderAddress
+	recipient   orderAddress
+	coupons     []string
+}
+
+type orderAddress struct {
+	Name       string
+	Country    string
+	PostalCode string
+	City       string
+	Street     string
+}
+
+// CreateOrder creates an order for the given user with the given id and
+// attributes. Id must be unique. ErrConflict is returned otherwise.
+func (a *Adapter) CreateOrder(_ context.Context, userID, id string, attributes persistence.OrderAttributes) error {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	if _, ok := a.ordersByID[id]; ok {
+		return persistence.ErrConflict
+	}
+
+	order := order{
+		userID:      userID,
+		cartID:      attributes.CartID,
+		cartVersion: attributes.CartVersion,
+		buyer:       orderAddress(attributes.Buyer),
+		recipient:   orderAddress(attributes.Recipient),
+		coupons:     make([]string, len(attributes.Coupons)),
+	}
+	copy(order.coupons, attributes.Coupons)
+	a.ordersByID[id] = &order
+	return nil
+}
+
+// FindOrderOfUser returns the order of the given user with the given id.
+// ErrNotFound is returned if there is no order with the id. ErrDeleted is
+// returned if the order did exist but is deleted. ErrNotOwnedByUser is returned
+// if the order exists but it's not owned by the given user.
+func (a *Adapter) FindOrderOfUser(_ context.Context, userID, id string) (*model.Order, error) {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	order, ok := a.ordersByID[id]
+	if !ok {
+		return nil, persistence.ErrNotFound
+	}
+
+	if order == nil {
+		return nil, persistence.ErrDeleted
+	}
+
+	if order.userID != userID {
+		return nil, persistence.ErrNotOwnedByUser
+	}
+
+	out := model.Order{
+		ID:          id,
+		CartID:      order.cartID,
+		CartVersion: order.cartVersion,
+		Buyer:       model.Address(order.buyer),
+		Recipient:   model.Address(order.recipient),
+		Coupons:     make([]string, len(order.coupons)),
+	}
+	copy(out.Coupons, order.coupons)
+	return &out, nil
+}
+
+// DeleteOrderOfUser deletes the order of the given user with the given id.
+// ErrNotFound is returned if there is no order with the id. ErrDeleted is
+// returned if the order did exist but is deleted. ErrNotOwnedByUser is returned
+// if the order exists but it's not owned by the given user.
+func (a *Adapter) DeleteOrderOfUser(_ context.Context, userID, id string) error {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	order, ok := a.ordersByID[id]
+	if !ok {
+		return persistence.ErrNotFound
+	}
+
+	if order == nil {
+		return persistence.ErrDeleted
+	}
+
+	if order.userID != userID {
+		return persistence.ErrNotOwnedByUser
+	}
+
+	a.ordersByID[id] = nil
+	return nil
 }
