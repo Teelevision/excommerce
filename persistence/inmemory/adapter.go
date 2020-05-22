@@ -396,6 +396,7 @@ type order struct {
 	buyer       orderAddress
 	recipient   orderAddress
 	coupons     []string
+	locked      bool
 }
 
 type orderAddress struct {
@@ -457,6 +458,7 @@ func (a *Adapter) FindOrderOfUser(_ context.Context, userID, id string) (*model.
 		Buyer:       model.Address(order.buyer),
 		Recipient:   model.Address(order.recipient),
 		Coupons:     make([]string, len(order.coupons)),
+		Locked:      order.locked,
 	}
 	copy(out.Coupons, order.coupons)
 	return &out, nil
@@ -465,7 +467,8 @@ func (a *Adapter) FindOrderOfUser(_ context.Context, userID, id string) (*model.
 // DeleteOrderOfUser deletes the order of the given user with the given id.
 // ErrNotFound is returned if there is no order with the id. ErrDeleted is
 // returned if the order did exist but is deleted. ErrNotOwnedByUser is returned
-// if the order exists but it's not owned by the given user.
+// if the order exists but it's not owned by the given user. ErrLocked is
+// returned if the order is owned by the given user, but is locked.
 func (a *Adapter) DeleteOrderOfUser(_ context.Context, userID, id string) error {
 	a.mx.Lock()
 	defer a.mx.Unlock()
@@ -483,6 +486,40 @@ func (a *Adapter) DeleteOrderOfUser(_ context.Context, userID, id string) error 
 		return persistence.ErrNotOwnedByUser
 	}
 
+	if order.locked {
+		return persistence.ErrLocked
+	}
+
 	a.ordersByID[id] = nil
+	return nil
+}
+
+// LockOrderOfUser locks the order of the given user with the given id.
+// ErrNotFound is returned if there is no order with the id. ErrDeleted is
+// returned if the order did exist but is deleted. ErrNotOwnedByUser is returned
+// if the order exists but it's not owned by the given user. ErrLocked is
+// returned if the order is owned by the given user, but is locked.
+func (a *Adapter) LockOrderOfUser(ctx context.Context, userID, id string) error {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	order, ok := a.ordersByID[id]
+	if !ok {
+		return persistence.ErrNotFound
+	}
+
+	if order == nil {
+		return persistence.ErrDeleted
+	}
+
+	if order.userID != userID {
+		return persistence.ErrNotOwnedByUser
+	}
+
+	if order.locked {
+		return persistence.ErrLocked
+	}
+
+	order.locked = true
 	return nil
 }

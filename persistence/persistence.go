@@ -91,7 +91,16 @@ type OrderRepository interface {
 	// ErrNotFound is returned if there is no order with the id. ErrDeleted is
 	// returned if the order did exist but is deleted. ErrNotOwnedByUser is
 	// returned if the order exists but it's not owned by the given user.
+	// ErrLocked is returned if the order is owned by the given user, but is
+	// locked.
 	DeleteOrderOfUser(ctx context.Context, userID, id string) error
+	// LockOrderOfUser locks the order of the given user with the given id.
+	// ErrNotFound is returned if there is no order with the id. ErrDeleted is
+	// returned if the order did exist but is deleted. ErrNotOwnedByUser is
+	// returned if the order exists but it's not owned by the given user.
+	// ErrLocked is returned if the order is owned by the given user, but is
+	// locked.
+	LockOrderOfUser(ctx context.Context, userID, id string) error
 }
 
 // OrderAttributes are common attributes of an order.

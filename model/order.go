@@ -10,4 +10,5 @@ type Order struct {
 	Buyer       Address
 	Recipient   Address
 	Coupons     []string
+	Locked      bool
 }

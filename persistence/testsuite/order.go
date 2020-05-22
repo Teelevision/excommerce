@@ -151,7 +151,7 @@ func (s *OrderRepositoryTestSuite) TestCreateOrder() {
 
 // TestFindOrderOfUser tests finding an order of a user.
 func (s *OrderRepositoryTestSuite) TestFindOrderOfUser() {
-	s.Run("finds a order", func() {
+	s.Run("finds an order", func() {
 		r := s.NewRepository()
 		err := r.CreateOrder(ctx,
 			"user",
@@ -274,7 +274,7 @@ func (s *OrderRepositoryTestSuite) TestFindOrderOfUser() {
 
 // TestDeleteOrderOfUser tests deleting an order of a user.
 func (s *OrderRepositoryTestSuite) TestDeleteOrderOfUser() {
-	s.Run("deletes a order", func() {
+	s.Run("deletes an order", func() {
 		r := s.NewRepository()
 		err := r.CreateOrder(ctx, "user", "id", persistence.OrderAttributes{})
 		s.Require().NoError(err)
@@ -291,6 +291,10 @@ func (s *OrderRepositoryTestSuite) TestDeleteOrderOfUser() {
 		s.Run("prevents re-creating it", func() {
 			err := r.CreateOrder(ctx, "user", "id", persistence.OrderAttributes{})
 			s.True(errors.Is(err, persistence.ErrConflict))
+		})
+		s.Run("prevents locking it", func() {
+			err := r.LockOrderOfUser(ctx, "user", "id")
+			s.True(errors.Is(err, persistence.ErrDeleted))
 		})
 	})
 	s.Run("user is case-sensitive", func() {
@@ -326,6 +330,75 @@ func (s *OrderRepositoryTestSuite) TestDeleteOrderOfUser() {
 			}
 			for _, id := range ids {
 				err := r.DeleteOrderOfUser(ctx, "user", id)
+				s.Require().NoError(err)
+			}
+		}
+		wg.Add(2)
+		go do(ids[:3])
+		go do(ids[3:])
+		wg.Wait()
+	})
+}
+
+// TestLockOrderOfUser tests locking an order of a user.
+func (s *OrderRepositoryTestSuite) TestLockOrderOfUser() {
+	s.Run("locks an order", func() {
+		r := s.NewRepository()
+		err := r.CreateOrder(ctx, "user", "id", persistence.OrderAttributes{})
+		s.Require().NoError(err)
+		err = r.LockOrderOfUser(ctx, "user", "id")
+		s.Require().NoError(err)
+		s.Run("prevents locking it again", func() {
+			err := r.LockOrderOfUser(ctx, "user", "id")
+			s.True(errors.Is(err, persistence.ErrLocked))
+		})
+		s.Run("prevents deleting it", func() {
+			err := r.DeleteOrderOfUser(ctx, "user", "id")
+			s.True(errors.Is(err, persistence.ErrLocked))
+		})
+		s.Run("and accessing it returns the locked state", func() {
+			order, err := r.FindOrderOfUser(ctx, "user", "id")
+			s.NoError(err)
+			s.True(order.Locked)
+		})
+		s.Run("prevents re-creating it", func() {
+			err := r.CreateOrder(ctx, "user", "id", persistence.OrderAttributes{})
+			s.True(errors.Is(err, persistence.ErrConflict))
+		})
+	})
+	s.Run("user is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateOrder(ctx, "user", "id", persistence.OrderAttributes{})
+		s.Require().NoError(err)
+		err = r.LockOrderOfUser(ctx, "USER", "id")
+		s.True(errors.Is(err, persistence.ErrNotOwnedByUser))
+	})
+	s.Run("id is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateOrder(ctx, "user", "id", persistence.OrderAttributes{})
+		s.Require().NoError(err)
+		err = r.LockOrderOfUser(ctx, "user", "ID")
+		s.True(errors.Is(err, persistence.ErrNotFound))
+	})
+	s.Run("works concurrently", func() {
+		r := s.NewRepository()
+		var wg sync.WaitGroup
+		ids := []string{
+			"0b29ec74-54ff-4869-9b0e-79b592158eab",
+			"cbfd4090-7698-46e5-ae18-6a4b51fb8975",
+			"7cb3fc3c-ca73-404b-ac88-08f2de941217",
+			"fc7f07dc-55a3-4d87-9e7c-58b5282053ec",
+			"f3db961b-a048-432c-955e-779171e576c3",
+			"bc227ca9-2a7f-48d6-82b1-57096d44e6a5",
+		}
+		do := func(ids []string) {
+			defer wg.Done()
+			for _, id := range ids {
+				err := r.CreateOrder(ctx, "user", id, persistence.OrderAttributes{})
+				s.Require().NoError(err)
+			}
+			for _, id := range ids {
+				err := r.LockOrderOfUser(ctx, "user", id)
 				s.Require().NoError(err)
 			}
 		}
