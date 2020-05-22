@@ -95,6 +95,8 @@ func (c *Cart) UpdateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 		return nil, ErrDeleted
 	case errors.Is(err, persistence.ErrNotOwnedByUser):
 		return nil, ErrForbidden
+	case errors.Is(err, persistence.ErrLocked):
+		return nil, ErrLocked
 	case err == nil:
 		cart.Positions = calculatePositionPrices(cart.Positions)
 		return cart, nil
@@ -119,6 +121,8 @@ func (c *Cart) Delete(ctx context.Context, cartID string) error {
 		return ErrDeleted
 	case errors.Is(err, persistence.ErrNotOwnedByUser):
 		return ErrForbidden
+	case errors.Is(err, persistence.ErrLocked):
+		return ErrLocked
 	case err == nil:
 		return nil
 	default:

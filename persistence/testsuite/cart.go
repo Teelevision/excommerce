@@ -534,6 +534,10 @@ func (s *CartRepositoryTestSuite) TestDeleteCartOfUser() {
 			err := r.UpdateCartOfUser(ctx, "user", "id", nil)
 			s.True(errors.Is(err, persistence.ErrDeleted))
 		})
+		s.Run("prevents locking it", func() {
+			err := r.LockCartOfUser(ctx, "user", "id")
+			s.True(errors.Is(err, persistence.ErrDeleted))
+		})
 	})
 	s.Run("user is case-sensitive", func() {
 		r := s.NewRepository()
@@ -568,6 +572,83 @@ func (s *CartRepositoryTestSuite) TestDeleteCartOfUser() {
 			}
 			for _, id := range ids {
 				err := r.DeleteCartOfUser(ctx, "user", id)
+				s.Require().NoError(err)
+			}
+		}
+		wg.Add(2)
+		go do(ids[:3])
+		go do(ids[3:])
+		wg.Wait()
+	})
+}
+
+// TestLockCartOfUser tests locking a cart of a user.
+func (s *CartRepositoryTestSuite) TestLockCartOfUser() {
+	s.Run("locks a cart", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		err = r.LockCartOfUser(ctx, "user", "id")
+		s.Require().NoError(err)
+		s.Run("prevents locking it again", func() {
+			err := r.LockCartOfUser(ctx, "user", "id")
+			s.True(errors.Is(err, persistence.ErrLocked))
+		})
+		s.Run("prevents deleting it", func() {
+			err := r.DeleteCartOfUser(ctx, "user", "id")
+			s.True(errors.Is(err, persistence.ErrLocked))
+		})
+		s.Run("and accessing it returns the locked state", func() {
+			cart, err := r.FindCartOfUser(ctx, "user", "id")
+			s.NoError(err)
+			s.True(cart.Locked)
+		})
+		s.Run("prevents accessing it when querying unlocked carts", func() {
+			carts, _ := r.FindAllUnlockedCartsOfUser(ctx, "user")
+			s.Empty(carts)
+		})
+		s.Run("prevents re-creating it", func() {
+			err := r.CreateCart(ctx, "user", "id", nil)
+			s.True(errors.Is(err, persistence.ErrConflict))
+		})
+		s.Run("prevents updating it", func() {
+			err := r.UpdateCartOfUser(ctx, "user", "id", nil)
+			s.True(errors.Is(err, persistence.ErrLocked))
+		})
+	})
+	s.Run("user is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		err = r.LockCartOfUser(ctx, "USER", "id")
+		s.True(errors.Is(err, persistence.ErrNotOwnedByUser))
+	})
+	s.Run("id is case-sensitive", func() {
+		r := s.NewRepository()
+		err := r.CreateCart(ctx, "user", "id", nil)
+		s.Require().NoError(err)
+		err = r.LockCartOfUser(ctx, "user", "ID")
+		s.True(errors.Is(err, persistence.ErrNotFound))
+	})
+	s.Run("works concurrently", func() {
+		r := s.NewRepository()
+		var wg sync.WaitGroup
+		ids := []string{
+			"c08be40f-52a1-4c43-8c41-cfe6b4255a20",
+			"ae3ea385-819a-4b09-b5f8-11a1631b5e52",
+			"5627da3f-107a-406e-86f2-66ba11faaca0",
+			"b9e13257-7d79-45eb-89e5-f91cb6a6546a",
+			"ddb7f6d3-028b-4b1b-8e4e-8dde864f6a29",
+			"cd59a2bd-f4da-438c-9498-6bbfa0bb8cf9",
+		}
+		do := func(ids []string) {
+			defer wg.Done()
+			for _, id := range ids {
+				err := r.CreateCart(ctx, "user", id, nil)
+				s.Require().NoError(err)
+			}
+			for _, id := range ids {
+				err := r.LockCartOfUser(ctx, "user", id)
 				s.Require().NoError(err)
 			}
 		}

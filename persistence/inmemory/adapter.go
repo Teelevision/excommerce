@@ -197,6 +197,7 @@ var _ persistence.CartRepository = (*Adapter)(nil)
 type cart struct {
 	userID    string
 	positions map[string]int // maps product id to quantity
+	locked    bool
 }
 
 // CreateCart creates a cart for the given user with the given id and positions.
@@ -225,8 +226,9 @@ func (a *Adapter) CreateCart(_ context.Context, userID, id string, positions map
 // existing positions are replaced. ErrNotFound is returned if the cart does not
 // exist. ErrDeleted is returned if the cart did exist but is deleted.
 // ErrNotOwnedByUser is returned if the cart exists but it's not owned by the
-// given user.
-func (a *Adapter) UpdateCartOfUser(ctx context.Context, userID, id string, positions map[string]int) error {
+// given user. ErrLocked is returned if the cart is owned by the given user, but
+// is locked.
+func (a *Adapter) UpdateCartOfUser(_ context.Context, userID, id string, positions map[string]int) error {
 	a.mx.Lock()
 	defer a.mx.Unlock()
 
@@ -241,6 +243,10 @@ func (a *Adapter) UpdateCartOfUser(ctx context.Context, userID, id string, posit
 
 	if cart.userID != userID {
 		return persistence.ErrNotOwnedByUser
+	}
+
+	if cart.locked {
+		return persistence.ErrLocked
 	}
 
 	cart.positions = make(map[string]int, len(positions))
@@ -262,6 +268,9 @@ func (a *Adapter) FindAllUnlockedCartsOfUser(_ context.Context, userID string) (
 			continue
 		}
 		if cart.userID != userID {
+			continue
+		}
+		if cart.locked {
 			continue
 		}
 		result = append(result, convertCartOut(id, cart))
@@ -296,8 +305,9 @@ func (a *Adapter) FindCartOfUser(_ context.Context, userID, id string) (*model.C
 // DeleteCartOfUser deletes the cart of the given user with the given cart id.
 // ErrNotFound is returned if there is no cart with the id. ErrDeleted is
 // returned if the cart did exist but is deleted. ErrNotOwnedByUser is returned
-// if the cart exists but it's not owned by the given user.
-func (a *Adapter) DeleteCartOfUser(ctx context.Context, userID, id string) error {
+// if the cart exists but it's not owned by the given user. ErrLocked is
+// returned if the cart is owned by the given user, but is locked.
+func (a *Adapter) DeleteCartOfUser(_ context.Context, userID, id string) error {
 	a.mx.Lock()
 	defer a.mx.Unlock()
 
@@ -314,7 +324,41 @@ func (a *Adapter) DeleteCartOfUser(ctx context.Context, userID, id string) error
 		return persistence.ErrNotOwnedByUser
 	}
 
+	if cart.locked {
+		return persistence.ErrLocked
+	}
+
 	a.cartsByID[id] = nil
+	return nil
+}
+
+// LockCartOfUser locks the cart of the given user with the given cart id.
+// ErrNotFound is returned if there is no cart with the id. ErrDeleted is
+// returned if the cart did exist but is deleted. ErrNotOwnedByUser is returned
+// if the cart exists but it's not owned by the given user. ErrLocked is
+// returned if the cart is owned by the given user, but is locked.
+func (a *Adapter) LockCartOfUser(ctx context.Context, userID, id string) error {
+	a.mx.Lock()
+	defer a.mx.Unlock()
+
+	cart, ok := a.cartsByID[id]
+	if !ok {
+		return persistence.ErrNotFound
+	}
+
+	if cart == nil {
+		return persistence.ErrDeleted
+	}
+
+	if cart.userID != userID {
+		return persistence.ErrNotOwnedByUser
+	}
+
+	if cart.locked {
+		return persistence.ErrLocked
+	}
+
+	cart.locked = true
 	return nil
 }
 
@@ -322,6 +366,7 @@ func convertCartOut(id string, cart *cart) *model.Cart {
 	out := model.Cart{
 		ID:        id,
 		Positions: make([]model.Position, 0, len(cart.positions)),
+		Locked:    cart.locked,
 	}
 	for productID, quantity := range cart.positions {
 		out.Positions = append(out.Positions, model.Position{

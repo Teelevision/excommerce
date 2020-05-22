@@ -48,7 +48,8 @@ type CartRepository interface {
 	// existing positions are replaced. ErrNotFound is returned if the cart does
 	// not exist. ErrDeleted is returned if the cart did exist but is deleted.
 	// ErrNotOwnedByUser is returned if the cart exists but it's not owned by
-	// the given user.
+	// the given user. ErrLocked is returned if the cart is owned by the given
+	// user, but is locked.
 	UpdateCartOfUser(ctx context.Context, userID, id string, positions map[string]int) error
 	// FindAllUnlockedCartsOfUser returns all stored carts and their positions
 	// of the given user.
@@ -62,7 +63,16 @@ type CartRepository interface {
 	// id. ErrNotFound is returned if there is no cart with the id. ErrDeleted
 	// is returned if the cart did exist but is deleted. ErrNotOwnedByUser is
 	// returned if the cart exists but it's not owned by the given user.
+	// ErrLocked is returned if the cart is owned by the given user, but is
+	// locked.
 	DeleteCartOfUser(ctx context.Context, userID, id string) error
+	// LockCartOfUser locks the cart of the given user with the given cart id.
+	// ErrNotFound is returned if there is no cart with the id. ErrDeleted is
+	// returned if the cart did exist but is deleted. ErrNotOwnedByUser is
+	// returned if the cart exists but it's not owned by the given user.
+	// ErrLocked is returned if the cart is owned by the given user, but is
+	// locked.
+	LockCartOfUser(ctx context.Context, userID, id string) error
 }
 
 // CouponRepository stores and loads coupons. It is safe for concurrent use.

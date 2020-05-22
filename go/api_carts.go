@@ -81,6 +81,8 @@ func (c *CartsAPI) DeleteCart(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound) // 404
 	case errors.Is(err, controller.ErrDeleted):
 		w.WriteHeader(http.StatusGone) // 410
+	case errors.Is(err, controller.ErrLocked):
+		w.WriteHeader(http.StatusLocked) // 423
 	case err == nil:
 		w.WriteHeader(http.StatusNoContent) // 204
 	default:
@@ -199,6 +201,8 @@ func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusForbidden) // 403
 	case errors.Is(err, controller.ErrDeleted):
 		w.WriteHeader(http.StatusGone) // 410
+	case errors.Is(err, controller.ErrLocked):
+		w.WriteHeader(http.StatusLocked) // 423
 	case err == nil:
 		status := http.StatusOK // 200
 		if !existed {
