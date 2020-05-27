@@ -668,23 +668,33 @@ components:
         name:
           type: string
           description: The name of the person, company or similar.
+          minLength: 1
+          maxLength: 1000
           example: Bundeskanzleramt, Bundeskanzlerin Angela Merkel
         country:
           type: string
           format: ISO 3166-1 alpha-2
           description: The ISO 3166-1 alpha-2 country code.
+          minLength: 2
+          maxLength: 2
           example: DE
         postalCode:
           type: string
           description: The postal code code.
+          minLength: 1
+          maxLength: 10
           example: "10557"
         city:
           type: string
           description: The city.
+          minLength: 1
+          maxLength: 1000
           example: Berlin
         street:
           type: string
           description: The street name, number and any suffixes.
+          minLength: 1
+          maxLength: 1000
           example: Willy-Brandt-Straße 1
 
     Coupon:

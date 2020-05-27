@@ -215,19 +215,23 @@ func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
 }
 
 func convertCartOut(cart *model.Cart) *Cart {
-	out := Cart{
+	return &Cart{
 		ID:        cart.ID,
-		Positions: make([]Position, len(cart.Positions)),
+		Positions: convertPositionsOut(cart.Positions),
 		Locked:    cart.Locked,
 	}
-	for i, position := range cart.Positions {
-		out.Positions[i].Product.ID = position.Product.ID
-		out.Positions[i].Product.Name = position.Product.Name
-		out.Positions[i].Product.Price = float32(position.Product.Price) / 100
-		out.Positions[i].Quantity = int32(position.Quantity)
-		out.Positions[i].Price = float32(position.Price) / 100
+}
+
+func convertPositionsOut(positions []model.Position) []Position {
+	out := make([]Position, len(positions))
+	for i, position := range positions {
+		out[i].Product.ID = position.Product.ID
+		out[i].Product.Name = position.Product.Name
+		out[i].Product.Price = float32(position.Product.Price) / 100
+		out[i].Quantity = int32(position.Quantity)
+		out[i].Price = float32(position.Price) / 100
 	}
-	return &out
+	return out
 }
 
 var uuidPattern = regexp.MustCompile(`^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$`)

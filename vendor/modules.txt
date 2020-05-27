@@ -9,6 +9,9 @@ github.com/gorilla/handlers
 # github.com/gorilla/mux v1.7.4
 ## explicit
 github.com/gorilla/mux
+# github.com/pariz/gountries v0.0.0-20200430155801-1c6a393df9c7
+## explicit
+github.com/pariz/gountries
 # github.com/pmezard/go-difflib v1.0.0
 github.com/pmezard/go-difflib/difflib
 # github.com/stretchr/testify v1.5.1

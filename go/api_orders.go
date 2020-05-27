@@ -11,16 +11,28 @@ package openapi
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 	"strings"
+	"unicode/utf8"
 
+	"github.com/Teelevision/excommerce/authentication"
+	"github.com/Teelevision/excommerce/controller"
+	"github.com/Teelevision/excommerce/model"
 	"github.com/gorilla/mux"
+	"github.com/pariz/gountries"
 )
 
 var _ Router = (*OrdersAPI)(nil)
 
 // A OrdersAPI binds http requests to an api service and writes the service results to the http response
 type OrdersAPI struct {
+	Authenticator     *authentication.Authenticator
+	OrderController   *controller.Order
+	CartController    *controller.Cart
+	ProductController *controller.Product
+
 	service OrdersAPIServicer
 }
 
@@ -31,7 +43,7 @@ func (c *OrdersAPI) Routes() Routes {
 			"CreateOrderFromCart",
 			strings.ToUpper("Post"),
 			"/beta/carts/{cartId}/prepareOrder",
-			c.CreateOrderFromCart,
+			c.Authenticator.HandlerFunc(c.CreateOrderFromCart),
 		},
 		{
 			"PlaceOrder",
@@ -44,21 +56,131 @@ func (c *OrdersAPI) Routes() Routes {
 
 // CreateOrderFromCart - Create order from cart
 func (c *OrdersAPI) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	// validation
 	params := mux.Vars(r)
 	cartID := params["cartId"]
-	order := &Order{}
-	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
-		w.WriteHeader(500)
+	if !uuidPattern.Match([]byte(cartID)) {
+		invalidInput("The cartId of the path is not a UUID.", uuidPattern.String(), w)
 		return
 	}
-
-	result, err := c.service.CreateOrderFromCart(cartID, *order)
-	if err != nil {
-		w.WriteHeader(500)
+	input := &Order{}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		invalidJSON(err, w)
 		return
 	}
+	// convert coupons to lower case
+	for i, code := range input.Coupons {
+		input.Coupons[i] = strings.ToLower(code)
+	}
+	for target, address := range map[string]Address{
+		"buyer":     input.Buyer,
+		"recipient": input.Buyer,
+	} {
+		if l := utf8.RuneCountInString(address.Name); l < 1 || l > 1000 {
+			failValidation(fmt.Sprintf("The %s's name must be 1 to 1000 characters long.", target),
+				fmt.Sprintf("/%s/name", target), w)
+			return
+		}
+		if len(address.Country) != 2 {
+			failValidation(fmt.Sprintf("The %s's country must be a 2 letter country code (ISO 3166-1).", target),
+				fmt.Sprintf("/%s/country", target), w)
+			return
+		}
+		if _, err := gountries.New().FindCountryByAlpha(address.Country); err != nil {
+			failValidation(fmt.Sprintf("The %s's country code %q is unknown.", target, address.Country),
+				fmt.Sprintf("/%s/country", target), w)
+			return
+		}
+		if l := utf8.RuneCountInString(address.PostalCode); l < 1 || l > 10 {
+			failValidation(fmt.Sprintf("The %s's postal code must be 1 to 10 characters long.", target),
+				fmt.Sprintf("/%s/postalCode", target), w)
+			return
+		}
+		if l := utf8.RuneCountInString(address.City); l < 1 || l > 1000 {
+			failValidation(fmt.Sprintf("The %s's city must be 1 to 1000 characters long.", target),
+				fmt.Sprintf("/%s/city", target), w)
+			return
+		}
+		if l := utf8.RuneCountInString(address.Street); l < 1 || l > 1000 {
+			failValidation(fmt.Sprintf("The %s's street must be 1 to 1000 characters long.", target),
+				fmt.Sprintf("/%s/street", target), w)
+			return
+		}
+	}
+	uniqueCoupons := make(map[string]interface{}, len(input.Coupons))
+	for i, code := range input.Coupons {
+		if _, exists := uniqueCoupons[code]; exists {
+			failValidation(fmt.Sprintf("The coupon %q cannot be used twice.", code),
+				fmt.Sprintf("/coupons/%d", i), w)
+			return
+		}
+		uniqueCoupons[code] = nil
+	}
 
-	EncodeJSONResponse(result, nil, w)
+	// convert to internal model
+	orderInput := model.Order{
+		CartID:    cartID,
+		Buyer:     model.Address(input.Buyer),
+		Recipient: model.Address(input.Recipient),
+		Coupons:   make([]*model.Coupon, len(input.Coupons)),
+	}
+	// load cart
+	cart, err := c.CartController.Get(ctx, cartID)
+	switch {
+	case errors.Is(err, controller.ErrForbidden):
+		w.WriteHeader(http.StatusForbidden) // 403
+		return
+	case errors.Is(err, controller.ErrNotFound):
+		w.WriteHeader(http.StatusNotFound) // 404
+		return
+	case errors.Is(err, controller.ErrDeleted):
+		w.WriteHeader(http.StatusGone) // 410
+		return
+	case err == nil && cart.Locked:
+		w.WriteHeader(http.StatusLocked) // 423
+		return
+	case err == nil:
+		orderInput.Cart = cart
+	default:
+		panic(err)
+	}
+	// load coupons
+	for i, code := range input.Coupons {
+		coupon, err := c.ProductController.GetCoupon(ctx, code)
+		switch {
+		case errors.Is(err, controller.ErrNotFound):
+			failValidation(fmt.Sprintf("The coupon %q is incorrect or expired.", code),
+				fmt.Sprintf("/coupons/%d", i), w)
+			return
+		case err == nil:
+			orderInput.Coupons[i] = coupon
+		default:
+			panic(err)
+		}
+	}
+
+	// action
+	order, err := c.OrderController.CreateAndGet(ctx, &orderInput)
+	switch {
+	case err == nil:
+		orderOut := Order{
+			ID:        order.ID,
+			Status:    "valid",
+			Price:     float32(order.Price) / 100,
+			Buyer:     Address(order.Buyer),
+			Recipient: Address(order.Recipient),
+			Coupons:   make([]string, len(order.Coupons)),
+			Positions: convertPositionsOut(order.Positions),
+		}
+		for i, coupon := range order.Coupons {
+			orderOut.Coupons[i] = coupon.Code
+		}
+		EncodeJSONResponse(&orderOut, nil, w)
+	default:
+		panic(err)
+	}
 }
 
 // PlaceOrder - Place order

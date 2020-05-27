@@ -62,3 +62,17 @@ func (c *Product) SaveCoupon(ctx context.Context, coupon *model.Coupon) (*model.
 		panic(err)
 	}
 }
+
+// GetCoupon returns the valid coupon with the given code. ErrNotFound is
+// returned if there is no coupon with the given code or it is invalid.
+func (c *Product) GetCoupon(ctx context.Context, code string) (*model.Coupon, error) {
+	coupon, err := c.CouponRepository.FindValidCoupon(ctx, code)
+	switch {
+	case errors.Is(err, persistence.ErrNotFound):
+		return nil, ErrNotFound
+	case err == nil:
+		return coupon, nil
+	default:
+		panic(err)
+	}
+}

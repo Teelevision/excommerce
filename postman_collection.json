@@ -388,6 +388,67 @@
 				}
 			],
 			"protocolProfileBehavior": {}
+		},
+		{
+			"name": "Orders",
+			"item": [
+				{
+					"name": "Create order from cart",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "5e32cdc4-ddd6-4aad-bfdc-0dd7c46150f4",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "f1722232-84f6-4b00-82b5-383b130daa1f",
+								"exec": [
+									"switch (pm.response.code) {",
+									"    case 200:",
+									"        const resp = pm.response.json();",
+									"        pm.environment.set(\"order.id\", resp.id);",
+									"}",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"buyer\": {\n    \"name\": \"Bundeskanzleramt, Bundeskanzlerin Angela Merkel\",\n    \"country\": \"DE\",\n    \"postalCode\": \"10557\",\n    \"city\": \"Berlin\",\n    \"street\": \"Willy-Brandt-Straße 1\"\n  },\n  \"recipient\": {\n    \"name\": \"Bundeskanzleramt, Bundeskanzlerin Angela Merkel\",\n    \"country\": \"DE\",\n    \"postalCode\": \"10557\",\n    \"city\": \"Berlin\",\n    \"street\": \"Willy-Brandt-Straße 1\"\n  },\n  \"coupons\": [\n    \"ORANGE30\"\n  ]\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{HOST}}/carts/{{cart.id}}/prepareOrder",
+							"host": [
+								"{{HOST}}"
+							],
+							"path": [
+								"carts",
+								"{{cart.id}}",
+								"prepareOrder"
+							]
+						}
+					},
+					"response": []
+				}
+			],
+			"protocolProfileBehavior": {}
 		}
 	],
 	"auth": {

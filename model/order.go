@@ -9,6 +9,8 @@ type Order struct {
 	CartVersion int
 	Buyer       Address
 	Recipient   Address
-	Coupons     []string
+	Coupons     []*Coupon
+	Price       int // in cents
+	Positions   []Position
 	Locked      bool
 }

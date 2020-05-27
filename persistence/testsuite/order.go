@@ -144,7 +144,7 @@ func (s *OrderRepositoryTestSuite) TestCreateOrder() {
 		s.NoError(err)
 		s.Equal(&model.Order{
 			ID:      "id",
-			Coupons: []string{"orange30"},
+			Coupons: []*model.Coupon{{Code: "orange30"}},
 		}, order)
 	})
 }
@@ -197,7 +197,7 @@ func (s *OrderRepositoryTestSuite) TestFindOrderOfUser() {
 				City:       "Berlin",
 				Street:     "Willy-Brandt-Straße 1",
 			},
-			Coupons: []string{"orange30"},
+			Coupons: []*model.Coupon{{Code: "orange30"}},
 		}, order)
 	})
 	s.Run("user is case-sensitive", func() {
@@ -257,17 +257,17 @@ func (s *OrderRepositoryTestSuite) TestFindOrderOfUser() {
 		s.Require().NoError(err)
 		s.Require().Equal(&model.Order{
 			ID:      "id",
-			Coupons: []string{"orange30"},
+			Coupons: []*model.Coupon{{Code: "orange30"}},
 		}, order)
 		// changing the result ...
-		order.Coupons[0] = "changed"
-		order.Coupons = append(order.Coupons, "added")
+		order.Coupons[0].Code = "changed"
+		order.Coupons = append(order.Coupons, &model.Coupon{Code: "added"})
 		// ... does not have any side effects
 		order, err = r.FindOrderOfUser(ctx, "user", "id")
 		s.NoError(err)
 		s.Equal(&model.Order{
 			ID:      "id",
-			Coupons: []string{"orange30"},
+			Coupons: []*model.Coupon{{Code: "orange30"}},
 		}, order)
 	})
 }

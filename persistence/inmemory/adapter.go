@@ -502,10 +502,12 @@ func (a *Adapter) FindOrderOfUser(_ context.Context, userID, id string) (*model.
 		CartVersion: order.cartVersion,
 		Buyer:       model.Address(order.buyer),
 		Recipient:   model.Address(order.recipient),
-		Coupons:     make([]string, len(order.coupons)),
+		Coupons:     make([]*model.Coupon, len(order.coupons)),
 		Locked:      order.locked,
 	}
-	copy(out.Coupons, order.coupons)
+	for i, code := range order.coupons {
+		out.Coupons[i] = &model.Coupon{Code: code}
+	}
 	return &out, nil
 }
 

@@ -38,6 +38,7 @@ func main() {
 	userController := controller.User{UserRepository: repo}
 	productController := controller.Product{ProductRepository: repo, CouponRepository: repo}
 	cartController := controller.Cart{CartRepository: repo, ProductRepository: repo}
+	orderController := controller.Order{OrderRepository: repo}
 
 	// apis
 	cartsAPI := &openapi.CartsAPI{
@@ -45,7 +46,12 @@ func main() {
 		CartController:    &cartController,
 		ProductController: &productController,
 	}
-	ordersAPI := &openapi.OrdersAPI{}
+	ordersAPI := &openapi.OrdersAPI{
+		Authenticator:     &authenticator,
+		OrderController:   &orderController,
+		ProductController: &productController,
+		CartController:    &cartController,
+	}
 	productsAPI := &openapi.ProductsAPI{
 		Authenticator:     &authenticator,
 		ProductController: &productController,
