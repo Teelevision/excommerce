@@ -1,8 +1,12 @@
 package controller
 
 import (
+	"bytes"
 	"context"
 	"errors"
+	"fmt"
+	"sort"
+	"strings"
 
 	"github.com/Teelevision/excommerce/authentication"
 	"github.com/Teelevision/excommerce/model"
@@ -24,10 +28,12 @@ func (c *Order) CreateAndGet(ctx context.Context, order *model.Order) (*model.Or
 	}
 	id := uuid.String()
 
-	// cart version
-	cartVersion := 0 // TODO
-	// TODO: We actually need a hash here, that includes the cart price, product
-	// prices, the applied coupons and any other discount.
+	// prepare positions
+	positions := calculateCartPositionPrices(order.Cart.Positions)
+	positions = generateOrderPositions(positions, order.Coupons)
+
+	// hash
+	hash := hashPositions(positions)
 
 	// coupon codes
 	couponCodes := make([]string, len(order.Coupons))
@@ -39,29 +45,27 @@ func (c *Order) CreateAndGet(ctx context.Context, order *model.Order) (*model.Or
 		authentication.AuthenticatedUser(ctx).ID,
 		id,
 		persistence.OrderAttributes{
-			CartID:      order.CartID,
-			CartVersion: cartVersion,
-			Buyer:       persistence.OrderAddress(order.Buyer),
-			Recipient:   persistence.OrderAddress(order.Recipient),
-			Coupons:     couponCodes,
+			Hash:      hash,
+			CartID:    order.CartID,
+			Buyer:     persistence.OrderAddress(order.Buyer),
+			Recipient: persistence.OrderAddress(order.Recipient),
+			Coupons:   couponCodes,
 		},
 	)
 	switch {
 	case errors.Is(err, persistence.ErrConflict):
 		panic(err)
 	case err == nil:
-		positions := generateOrderPositions(order.Cart.Positions, order.Coupons)
-		positions = calculatePositionPrices(positions)
 		return &model.Order{
-			ID:          id,
-			Buyer:       order.Buyer,
-			Recipient:   order.Recipient,
-			Cart:        order.Cart,
-			CartID:      order.CartID,
-			CartVersion: cartVersion,
-			Coupons:     order.Coupons,
-			Positions:   positions,
-			Price:       calculatePositionSum(positions),
+			ID:        id,
+			Hash:      hash,
+			Buyer:     order.Buyer,
+			Recipient: order.Recipient,
+			Cart:      order.Cart,
+			CartID:    order.CartID,
+			Coupons:   order.Coupons,
+			Positions: positions,
+			Price:     calculatePositionSum(positions),
 		}, nil
 	default:
 		panic(err)
@@ -87,12 +91,10 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 		// add position for coupon
 		price := -coupon.Discount * position.Price / 100
 		out = append(out, model.Position{
-			Quantity: 1,
-			Price:    price,
-			Product: &model.Product{
-				Name:  coupon.Name,
-				Price: price,
-			},
+			Quantity:   1,
+			Price:      price,
+			Coupon:     coupon,
+			CouponCode: coupon.Code,
 		})
 	}
 	return out
@@ -103,4 +105,25 @@ func calculatePositionSum(positions []model.Position) (sum int) {
 		sum += position.Price
 	}
 	return
+}
+
+func hashPositions(positions []model.Position) []byte {
+	entries := make(sort.StringSlice, len(positions))
+	for i, position := range positions {
+		buf := new(bytes.Buffer)
+		fmt.Fprintf(buf, "%d,%d,", position.Quantity, position.Price)
+		switch {
+		case position.Product != nil:
+			fmt.Fprintf(buf, "product:%s", position.Product.ID)
+		case position.Coupon != nil:
+			fmt.Fprintf(buf, "coupon:%s,%d,%q", position.Coupon.ProductID, position.Coupon.Discount, position.Coupon.Code)
+		default:
+			panic("position has no product and no coupon")
+		}
+		entries[i] = buf.String()
+	}
+	entries.Sort()
+	base := strings.Join(entries, "\n")
+	// TODO: choose hash algorithm
+	return []byte(base)
 }

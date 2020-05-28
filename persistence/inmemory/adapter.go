@@ -435,13 +435,13 @@ func (a *Adapter) FindValidCoupon(ctx context.Context, code string) (*model.Coup
 var _ persistence.OrderRepository = (*Adapter)(nil)
 
 type order struct {
-	userID      string
-	cartID      string
-	cartVersion int
-	buyer       orderAddress
-	recipient   orderAddress
-	coupons     []string
-	locked      bool
+	userID    string
+	hash      []byte
+	cartID    string
+	buyer     orderAddress
+	recipient orderAddress
+	coupons   []string
+	locked    bool
 }
 
 type orderAddress struct {
@@ -463,12 +463,15 @@ func (a *Adapter) CreateOrder(_ context.Context, userID, id string, attributes p
 	}
 
 	order := order{
-		userID:      userID,
-		cartID:      attributes.CartID,
-		cartVersion: attributes.CartVersion,
-		buyer:       orderAddress(attributes.Buyer),
-		recipient:   orderAddress(attributes.Recipient),
-		coupons:     make([]string, len(attributes.Coupons)),
+		userID:    userID,
+		cartID:    attributes.CartID,
+		buyer:     orderAddress(attributes.Buyer),
+		recipient: orderAddress(attributes.Recipient),
+		coupons:   make([]string, len(attributes.Coupons)),
+	}
+	if attributes.Hash != nil {
+		order.hash = make([]byte, len(attributes.Hash))
+		copy(order.hash, attributes.Hash)
 	}
 	copy(order.coupons, attributes.Coupons)
 	a.ordersByID[id] = &order
@@ -497,13 +500,16 @@ func (a *Adapter) FindOrderOfUser(_ context.Context, userID, id string) (*model.
 	}
 
 	out := model.Order{
-		ID:          id,
-		CartID:      order.cartID,
-		CartVersion: order.cartVersion,
-		Buyer:       model.Address(order.buyer),
-		Recipient:   model.Address(order.recipient),
-		Coupons:     make([]*model.Coupon, len(order.coupons)),
-		Locked:      order.locked,
+		ID:        id,
+		CartID:    order.cartID,
+		Buyer:     model.Address(order.buyer),
+		Recipient: model.Address(order.recipient),
+		Coupons:   make([]*model.Coupon, len(order.coupons)),
+		Locked:    order.locked,
+	}
+	if order.hash != nil {
+		out.Hash = make([]byte, len(order.hash))
+		copy(out.Hash, order.hash)
 	}
 	for i, code := range order.coupons {
 		out.Coupons[i] = &model.Coupon{Code: code}

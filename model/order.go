@@ -4,13 +4,13 @@ package model
 type Order struct {
 	ID string
 
-	Cart        *Cart
-	CartID      string
-	CartVersion int
-	Buyer       Address
-	Recipient   Address
-	Coupons     []*Coupon
-	Price       int // in cents
-	Positions   []Position
-	Locked      bool
+	Hash      []byte
+	Cart      *Cart
+	CartID    string
+	Buyer     Address
+	Recipient Address
+	Coupons   []*Coupon
+	Price     int // in cents
+	Positions []Position
+	Locked    bool
 }

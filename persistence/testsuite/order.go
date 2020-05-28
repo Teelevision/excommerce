@@ -30,8 +30,8 @@ func (s *OrderRepositoryTestSuite) TestCreateOrder() {
 			"c1f8e321-4eb4-4f6f-9674-c9b1e452e7d9", // user id
 			"ba3e44b1-59ea-4325-a8a8-600f3a081e73", // id
 			persistence.OrderAttributes{
-				CartID:      "2c3573ab-1d57-46bf-b979-5eaac02d850b",
-				CartVersion: 123,
+				Hash:   []byte("foo\nbar"),
+				CartID: "2c3573ab-1d57-46bf-b979-5eaac02d850b",
 				Buyer: persistence.OrderAddress{
 					Name:       "Bundeskanzleramt, Bundeskanzlerin Angela Merkel",
 					Country:    "DE",
@@ -132,11 +132,14 @@ func (s *OrderRepositoryTestSuite) TestCreateOrder() {
 	s.Run("changing the input does not have any side effects", func() {
 		r := s.NewRepository()
 		attributes := persistence.OrderAttributes{
+			Hash:    []byte("foobar"),
 			Coupons: []string{"orange30"},
 		}
 		err := r.CreateOrder(ctx, "user", "id", attributes)
 		s.Require().NoError(err)
 		// changing the input ...
+		attributes.Hash[0] = 'c'
+		attributes.Hash = append(attributes.Hash, 'a')
 		attributes.Coupons[0] = "changed"
 		attributes.Coupons = append(attributes.Coupons, "added")
 		// ... does not have any side effects
@@ -144,6 +147,7 @@ func (s *OrderRepositoryTestSuite) TestCreateOrder() {
 		s.NoError(err)
 		s.Equal(&model.Order{
 			ID:      "id",
+			Hash:    []byte("foobar"),
 			Coupons: []*model.Coupon{{Code: "orange30"}},
 		}, order)
 	})
@@ -157,8 +161,8 @@ func (s *OrderRepositoryTestSuite) TestFindOrderOfUser() {
 			"user",
 			"id",
 			persistence.OrderAttributes{
-				CartID:      "8a74f13f-c1ad-4d36-96b6-39f1604e77df",
-				CartVersion: 123,
+				Hash:   []byte("foo\nbar"),
+				CartID: "8a74f13f-c1ad-4d36-96b6-39f1604e77df",
 				Buyer: persistence.OrderAddress{
 					Name:       "Bundeskanzleramt, Bundeskanzlerin Angela Merkel",
 					Country:    "DE",
@@ -180,9 +184,9 @@ func (s *OrderRepositoryTestSuite) TestFindOrderOfUser() {
 		order, err := r.FindOrderOfUser(ctx, "user", "id")
 		s.NoError(err)
 		s.Equal(&model.Order{
-			ID:          "id",
-			CartID:      "8a74f13f-c1ad-4d36-96b6-39f1604e77df",
-			CartVersion: 123,
+			ID:     "id",
+			Hash:   []byte("foo\nbar"),
+			CartID: "8a74f13f-c1ad-4d36-96b6-39f1604e77df",
 			Buyer: model.Address{
 				Name:       "Bundeskanzleramt, Bundeskanzlerin Angela Merkel",
 				Country:    "DE",
@@ -249,6 +253,7 @@ func (s *OrderRepositoryTestSuite) TestFindOrderOfUser() {
 			"user",
 			"id",
 			persistence.OrderAttributes{
+				Hash:    []byte("foobar"),
 				Coupons: []string{"orange30"},
 			},
 		)
@@ -257,9 +262,12 @@ func (s *OrderRepositoryTestSuite) TestFindOrderOfUser() {
 		s.Require().NoError(err)
 		s.Require().Equal(&model.Order{
 			ID:      "id",
+			Hash:    []byte("foobar"),
 			Coupons: []*model.Coupon{{Code: "orange30"}},
 		}, order)
 		// changing the result ...
+		order.Hash[0] = 'c'
+		order.Hash = append(order.Hash, 'a')
 		order.Coupons[0].Code = "changed"
 		order.Coupons = append(order.Coupons, &model.Coupon{Code: "added"})
 		// ... does not have any side effects
@@ -267,6 +275,7 @@ func (s *OrderRepositoryTestSuite) TestFindOrderOfUser() {
 		s.NoError(err)
 		s.Equal(&model.Order{
 			ID:      "id",
+			Hash:    []byte("foobar"),
 			Coupons: []*model.Coupon{{Code: "orange30"}},
 		}, order)
 	})

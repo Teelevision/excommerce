@@ -115,11 +115,11 @@ type OrderRepository interface {
 
 // OrderAttributes are common attributes of an order.
 type OrderAttributes struct {
-	CartID      string
-	CartVersion int
-	Buyer       OrderAddress
-	Recipient   OrderAddress
-	Coupons     []string
+	Hash      []byte
+	CartID    string
+	Buyer     OrderAddress
+	Recipient OrderAddress
+	Coupons   []string
 }
 
 // OrderAddress is an address used in orders.

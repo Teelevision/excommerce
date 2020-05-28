@@ -225,11 +225,19 @@ func convertCartOut(cart *model.Cart) *Cart {
 func convertPositionsOut(positions []model.Position) []Position {
 	out := make([]Position, len(positions))
 	for i, position := range positions {
-		out[i].Product.ID = position.Product.ID
-		out[i].Product.Name = position.Product.Name
-		out[i].Product.Price = float32(position.Product.Price) / 100
 		out[i].Quantity = int32(position.Quantity)
 		out[i].Price = float32(position.Price) / 100
+		if position.ProductID != "" {
+			out[i].Product.ID = position.ProductID
+			if position.Product != nil {
+				out[i].Product.Name = position.Product.Name
+				out[i].Product.Price = float32(position.Product.Price) / 100
+			}
+		}
+		if position.Coupon != nil {
+			out[i].Product.Name = position.Coupon.Name
+			out[i].Product.Price = out[i].Price / float32(out[i].Quantity)
+		}
 	}
 	return out
 }
