@@ -79,6 +79,13 @@
             }}
           </v-col>
         </v-row>
+        <v-row>
+          <v-col style="text-align: right;">
+            <v-btn color="primary" @click="goToCheckout"
+              >Proceed to checkout</v-btn
+            >
+          </v-col>
+        </v-row>
       </v-container>
     </v-flex>
   </v-layout>
@@ -129,6 +136,9 @@ export default {
           quantity: this.quantity[i]
         }))
       ).then(this.updateQuantity)
+    },
+    goToCheckout() {
+      this.$router.push('/checkout')
     }
   }
 }

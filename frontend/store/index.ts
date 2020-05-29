@@ -1,19 +1,21 @@
 import { Store, ActionTree, ActionContext } from 'vuex'
 import createPersistedState from 'vuex-persistedstate'
 import { v4 as uuidv4 } from 'uuid'
-import { Product, Cart, Position, User } from '~/models'
+import { Product, Cart, Position, User, Order } from '~/models'
 import { ProductsApi, UsersApi, CartsApi, Configuration } from '~/client'
 
 interface State {
   products: Product[]
   cart: Cart
   user: User
+  order: Order | null
 }
 
 export const state: () => State = () => ({
   products: [],
   cart: new Cart(),
-  user: new User('', '')
+  user: new User('', ''),
+  order: null
 })
 
 const initialState = state
@@ -58,6 +60,9 @@ export const mutations = {
   loggedOut(state: State) {
     state.user = initialState().user
     state.cart = initialState().cart
+  },
+  orderReceived(state: State, order: Order) {
+    state.order = order
   }
 }
 
