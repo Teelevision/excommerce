@@ -74,13 +74,22 @@ func (c *OrdersAPI) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) 
 	for i, code := range input.Coupons {
 		input.Coupons[i] = strings.ToLower(code)
 	}
-	for target, address := range map[string]Address{
-		"buyer":     input.Buyer,
-		"recipient": input.Buyer,
+	for _, s := range []struct {
+		target  string
+		address Address
+	}{
+		{"buyer", input.Buyer},
+		{"recipient", input.Recipient},
 	} {
+		target, address := s.target, s.address
 		if l := utf8.RuneCountInString(address.Name); l < 1 || l > 1000 {
 			failValidation(fmt.Sprintf("The %s's name must be 1 to 1000 characters long.", target),
 				fmt.Sprintf("/%s/name", target), w)
+			return
+		}
+		if address.Country == "" {
+			failValidation(fmt.Sprintf("The %s's country must be given.", target),
+				fmt.Sprintf("/%s/country", target), w)
 			return
 		}
 		if len(address.Country) != 2 {
