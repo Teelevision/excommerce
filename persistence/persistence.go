@@ -130,3 +130,41 @@ type OrderAddress struct {
 	City       string
 	Street     string
 }
+
+// PlacedOrderRepository places orders. It is safe for concurrent use.
+type PlacedOrderRepository interface {
+	// PlaceOrder places the order and all related data.
+	PlaceOrder(ctx context.Context, order PlacedOrder) error
+}
+
+// PlacedOrder is a placed order including all related data.
+type PlacedOrder struct {
+	UserID    string
+	Buyer     OrderAddress
+	Recipient OrderAddress
+	Coupons   map[string]OrderCoupon  // code to coupon
+	Products  map[string]OrderProduct // id to product
+	Price     int                     // in cents
+	Positions []OrderPosition
+}
+
+// OrderProduct is a product of a PlacedOrder.
+type OrderProduct struct {
+	Name  string
+	Price int // in cents
+}
+
+// OrderCoupon is a coupon of a PlacedOrder.
+type OrderCoupon struct {
+	ProductID string
+	Name      string
+	Discount  int // in percent
+}
+
+// OrderPosition is a position of a PlacedOrder.
+type OrderPosition struct {
+	ProductID  string
+	CouponCode string
+	Quantity   int
+	Price      int // in cents
+}

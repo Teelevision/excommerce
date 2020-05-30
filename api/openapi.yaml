@@ -330,8 +330,8 @@ paths:
                 message: The street is missing in the recipient's address.
                 pointer: /recipient/street
         423:
-          description: The cart is locked and cannot be ordered. A cart is
-            locked if there already is a placed order for that cart.
+          description: The cart is locked and cannot be ordered. A cart might be
+            locked because there already is a placed order for that cart.
         5XX:
           $ref: "#/components/responses/5XX"
 

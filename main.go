@@ -20,6 +20,7 @@ import (
 	"github.com/Teelevision/excommerce/model"
 	"github.com/Teelevision/excommerce/persistence"
 	"github.com/Teelevision/excommerce/persistence/inmemory"
+	logrepo "github.com/Teelevision/excommerce/persistence/log"
 	"github.com/gorilla/handlers"
 )
 
@@ -30,6 +31,7 @@ func main() {
 	repo := inmemory.NewAdapter()
 	initAdmin(context.Background(), repo)
 	initProducts(context.Background(), repo)
+	logRepo := logrepo.NewAdapter()
 
 	// authentication
 	authenticator := authentication.Authenticator{UserRepository: repo}
@@ -38,7 +40,12 @@ func main() {
 	userController := controller.User{UserRepository: repo}
 	productController := controller.Product{ProductRepository: repo, CouponRepository: repo}
 	cartController := controller.Cart{CartRepository: repo, ProductRepository: repo}
-	orderController := controller.Order{OrderRepository: repo}
+	orderController := controller.Order{
+		OrderRepository:       repo,
+		CartRepository:        repo,
+		ProductRepository:     repo,
+		PlacedOrderRepository: logRepo,
+	}
 
 	// apis
 	cartsAPI := &openapi.CartsAPI{

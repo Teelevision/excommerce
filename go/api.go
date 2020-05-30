@@ -46,12 +46,3 @@ type UsersAPIRouter interface {
 	Login(http.ResponseWriter, *http.Request)
 	Register(http.ResponseWriter, *http.Request)
 }
-
-// OrdersAPIServicer defines the api actions for the OrdersApi service
-// This interface intended to stay up to date with the openapi yaml used to generate it,
-// while the service implementation can ignored with the .openapi-generator-ignore file
-// and updated with the logic required for the API.
-type OrdersAPIServicer interface {
-	CreateOrderFromCart(string, Order) (interface{}, error)
-	PlaceOrder(string) (interface{}, error)
-}

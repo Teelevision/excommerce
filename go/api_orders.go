@@ -32,8 +32,6 @@ type OrdersAPI struct {
 	OrderController   *controller.Order
 	CartController    *controller.Cart
 	ProductController *controller.Product
-
-	service OrdersAPIServicer
 }
 
 // Routes returns all of the api route for the OrdersApiController
@@ -49,7 +47,7 @@ func (c *OrdersAPI) Routes() Routes {
 			"PlaceOrder",
 			strings.ToUpper("Post"),
 			"/beta/orders/{orderId}/place",
-			c.PlaceOrder,
+			c.Authenticator.HandlerFunc(c.PlaceOrder),
 		},
 	}
 }
@@ -174,19 +172,7 @@ func (c *OrdersAPI) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) 
 	order, err := c.OrderController.CreateAndGet(ctx, &orderInput)
 	switch {
 	case err == nil:
-		orderOut := Order{
-			ID:        order.ID,
-			Status:    "valid",
-			Price:     float32(order.Price) / 100,
-			Buyer:     Address(order.Buyer),
-			Recipient: Address(order.Recipient),
-			Coupons:   make([]string, len(order.Coupons)),
-			Positions: convertPositionsOut(order.Positions),
-		}
-		for i, coupon := range order.Coupons {
-			orderOut.Coupons[i] = coupon.Code
-		}
-		EncodeJSONResponse(&orderOut, nil, w)
+		EncodeJSONResponse(convertOrderOut(order, "valid"), nil, w)
 	default:
 		panic(err)
 	}
@@ -194,13 +180,44 @@ func (c *OrdersAPI) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) 
 
 // PlaceOrder - Place order
 func (c *OrdersAPI) PlaceOrder(w http.ResponseWriter, r *http.Request) {
+	// validation
 	params := mux.Vars(r)
 	orderID := params["orderId"]
-	result, err := c.service.PlaceOrder(orderID)
-	if err != nil {
-		w.WriteHeader(500)
+	if !uuidPattern.Match([]byte(orderID)) {
+		invalidInput("The orderId of the path is not a UUID.", uuidPattern.String(), w)
 		return
 	}
 
-	EncodeJSONResponse(result, nil, w)
+	// action
+	order, err := c.OrderController.Place(r.Context(), orderID)
+	switch {
+	case errors.Is(err, controller.ErrForbidden):
+		w.WriteHeader(http.StatusForbidden) // 403
+	case errors.Is(err, controller.ErrNotFound):
+		w.WriteHeader(http.StatusNotFound) // 404
+	case errors.Is(err, controller.ErrDeleted):
+		w.WriteHeader(http.StatusGone) // 410
+	case errors.Is(err, controller.ErrLocked):
+		w.WriteHeader(http.StatusLocked) // 423
+	case err == nil:
+		EncodeJSONResponse(convertOrderOut(order, "placed"), nil, w)
+	default:
+		panic(err)
+	}
+}
+
+func convertOrderOut(order *model.Order, status string) *Order {
+	out := Order{
+		ID:        order.ID,
+		Status:    status,
+		Price:     float32(order.Price) / 100,
+		Buyer:     Address(order.Buyer),
+		Recipient: Address(order.Recipient),
+		Coupons:   make([]string, len(order.Coupons)),
+		Positions: convertPositionsOut(order.Positions),
+	}
+	for i, coupon := range order.Coupons {
+		out.Coupons[i] = coupon.Code
+	}
+	return &out
 }

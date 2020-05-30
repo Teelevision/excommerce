@@ -5,6 +5,7 @@ import (
 
 	"github.com/Teelevision/excommerce/persistence"
 	"github.com/Teelevision/excommerce/persistence/inmemory"
+	"github.com/Teelevision/excommerce/persistence/log"
 	"github.com/Teelevision/excommerce/persistence/testsuite"
 )
 
@@ -46,6 +47,14 @@ func TestReferenceImplementation(t *testing.T) {
 		suite := &testsuite.OrderRepositoryTestSuite{
 			NewRepository: func() persistence.OrderRepository {
 				return inmemory.NewAdapter()
+			},
+		}
+		suite.RunSuite(t)
+	}
+	{ // placed order
+		suite := &testsuite.PlacedOrderRepositoryTestSuite{
+			NewRepository: func() persistence.PlacedOrderRepository {
+				return log.NewAdapter()
 			},
 		}
 		suite.RunSuite(t)
