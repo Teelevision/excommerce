@@ -81,7 +81,10 @@
         </v-row>
         <v-row>
           <v-col style="text-align: right;">
-            <v-btn color="primary" @click="goToCheckout"
+            <v-btn
+              color="primary"
+              :disabled="!positions.length"
+              @click="goToCheckout"
               >Proceed to checkout</v-btn
             >
           </v-col>

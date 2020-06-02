@@ -161,7 +161,8 @@ export default {
     ...mapState({
       user: 'user',
       orderFromState: 'order',
-      productsFromState: 'products'
+      productsFromState: 'products',
+      cartEmpty: ({ cart }) => !cart.positions.length
     }),
     positions() {
       if (this.order == null) {
@@ -179,6 +180,9 @@ export default {
   beforeMount() {
     if (!this.user.id) {
       this.$router.push('/login')
+    }
+    if (this.cartEmpty) {
+      this.$router.push('/cart')
     }
   },
   mounted() {

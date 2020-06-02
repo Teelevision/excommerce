@@ -141,11 +141,15 @@ export default {
   }),
   computed: mapState({
     user: 'user',
-    cartId: ({ cart }) => cart.id
+    cartId: ({ cart }) => cart.id,
+    cartEmpty: ({ cart }) => !cart.positions.length
   }),
   beforeMount() {
     if (!this.user.id) {
       this.$router.push('/login')
+    }
+    if (this.cartEmpty) {
+      this.$router.push('/cart')
     }
   },
   methods: {
