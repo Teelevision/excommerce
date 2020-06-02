@@ -143,6 +143,11 @@ export default {
     user: 'user',
     cartId: ({ cart }) => cart.id
   }),
+  beforeMount() {
+    if (!this.user.id) {
+      this.$router.push('/login')
+    }
+  },
   methods: {
     ...mapMutations(['orderReceived']),
     storeOrder() {

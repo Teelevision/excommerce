@@ -14,7 +14,7 @@
       >
         <v-btn text><v-icon left>mdi-account-circle</v-icon> Login</v-btn>
       </nuxt-link>
-      <v-btn v-if="user.id" text @click="logout">
+      <v-btn v-if="user.id" text @click="doLogout">
         <v-icon left>mdi-account-circle</v-icon>
         Logout ({{ user.name }})
       </v-btn>
@@ -54,6 +54,11 @@ export default {
         0
       )
   }),
-  methods: mapActions(['logout'])
+  methods: {
+    ...mapActions(['logout']),
+    doLogout() {
+      this.logout().then(() => this.$router.push('/'))
+    }
+  }
 }
 </script>

@@ -159,6 +159,7 @@ export default {
   }),
   computed: {
     ...mapState({
+      user: 'user',
       orderFromState: 'order',
       productsFromState: 'products'
     }),
@@ -173,6 +174,11 @@ export default {
             name: 'unknown'
           }
       }))
+    }
+  },
+  beforeMount() {
+    if (!this.user.id) {
+      this.$router.push('/login')
     }
   },
   mounted() {
