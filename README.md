@@ -19,6 +19,12 @@ Example Commerce System
   expires at date is given. Use values like `10s`, `2.5m` or `1h30m` to express
   a duration. Defaults to `10s`.
 
+## Administration
+
+* There is a built-in administration account with the credentials `admin:admin`.
+* Use the enclosed postman collection and environment to create coupons using
+  the administration account.
+
 ## Frontend
 
 * Run the dev frontend on [localhost:3000](http://localhost:3000/): `make frontend`
