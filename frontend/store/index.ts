@@ -104,34 +104,48 @@ export const actions = <ActionTreeMutations>{
       dispatch('loadCartFromServer')
     }
   },
-  async storeCartOnServer({ commit, state: { cart, user } }) {
+  async storeCartOnServer({ commit, dispatch, state: { cart, user } }) {
     if (!user.id) {
       return
     }
     const uuid = cart.id || uuidv4()
-    const {
-      data: { id, positions }
-    } = await new CartsApi(
-      new Configuration({ username: user.id, password: user.password })
-    ).storeCart(uuid, {
-      id: uuid,
-      positions: cart.positions
-        .filter(({ productId }) => productId !== undefined)
-        .map(({ quantity, productId }) => ({
+    try {
+      const {
+        data: { id, positions }
+      } = await new CartsApi(
+        new Configuration({ username: user.id, password: user.password })
+      ).storeCart(uuid, {
+        id: uuid,
+        positions: cart.positions
+          .filter(({ productId }) => productId !== undefined)
+          .map(({ quantity, productId }) => ({
+            quantity,
+            product: { id: productId || '', name: '' },
+            price: 0
+          }))
+      })
+      commit('updateCart', {
+        id,
+        positions: positions.map(({ quantity, product, price }) => ({
           quantity,
-          product: { id: productId || '', name: '' },
-          price: 0
+          product,
+          price,
+          productId: product.id
         }))
-    })
-    commit('updateCart', {
-      id,
-      positions: positions.map(({ quantity, product, price }) => ({
-        quantity,
-        product,
-        price,
-        productId: product.id
-      }))
-    })
+      })
+    } catch (e) {
+      switch (e.response.status) {
+        case 423:
+        case 410:
+          // try again with new cart id
+          if (cart.id) {
+            commit('updateCart', { ...cart, id: undefined })
+            dispatch('storeCartOnServer')
+            return
+          }
+      }
+      throw e
+    }
   },
   async loadCartFromServer({ commit, state: { user } }) {
     const { data: carts } = await new CartsApi(
