@@ -446,6 +446,47 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Place order",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ebdc4142-a6f0-4226-90b0-6259554fbae1",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "529c9b2b-e0b1-4e20-9a9c-5984e5109b6f",
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{HOST}}/orders/{{order.id}}/place",
+							"host": [
+								"{{HOST}}"
+							],
+							"path": [
+								"orders",
+								"{{order.id}}",
+								"place"
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"protocolProfileBehavior": {}
