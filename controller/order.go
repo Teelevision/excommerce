@@ -342,7 +342,7 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 	}
 
 	// Sets of 4 pears and 2 bananas get a 30% discount.
-	var pearPosition, bananaPosition int
+	pearPosition, bananaPosition := -1, -1
 	for i, position := range positions {
 		switch position.ProductID {
 		case "5438bfe8-6bd2-4a88-ac36-ec29716eb6d7": // pear
@@ -351,9 +351,12 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 			bananaPosition = i
 		}
 	}
-	numSets := positions[pearPosition].Quantity / 4
-	if n := positions[bananaPosition].Quantity / 2; n < numSets {
-		numSets = n
+	var numSets int
+	if pearPosition >= 0 && bananaPosition >= 0 {
+		numSets = positions[pearPosition].Quantity / 4
+		if n := positions[bananaPosition].Quantity / 2; n < numSets {
+			numSets = n
+		}
 	}
 	if numSets > 0 {
 		price := 4*positions[pearPosition].Product.Price +
