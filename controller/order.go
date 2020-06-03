@@ -19,6 +19,7 @@ type Order struct {
 	OrderRepository       persistence.OrderRepository
 	CartRepository        persistence.CartRepository
 	ProductRepository     persistence.ProductRepository
+	CouponRepository      persistence.CouponRepository
 	PlacedOrderRepository persistence.PlacedOrderRepository
 }
 
@@ -195,12 +196,29 @@ func (c *Order) preparePlace(ctx context.Context, orderID string, expectLocked b
 
 	// load products
 	for i, position := range order.Cart.Positions {
+		if product := getSpecialProduct(position.ProductID); product != nil {
+			order.Cart.Positions[i].Product = product
+			continue
+		}
 		product, err := c.ProductRepository.FindProduct(ctx, position.ProductID)
 		switch {
 		case errors.Is(err, persistence.ErrNotFound):
 			return nil, deleteOrder()
 		case err == nil:
 			order.Cart.Positions[i].Product = product
+		default:
+			panic(err)
+		}
+	}
+
+	// load coupons
+	for i, coupon := range order.Coupons {
+		coupon, err := c.CouponRepository.FindValidCoupon(ctx, coupon.Code)
+		switch {
+		case errors.Is(err, persistence.ErrNotFound):
+			return nil, deleteOrder()
+		case err == nil:
+			order.Coupons[i] = coupon
 		default:
 			panic(err)
 		}
@@ -289,6 +307,15 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 	positions = consolidatePositions(positions)
 	positions = calculatePositionPrices(positions)
 
+	// drop all non-products
+	for i := 0; i < len(positions); i++ {
+		if positions[i].ProductID != "" {
+			continue
+		}
+		positions = append(positions[:i], positions[i+1:]...)
+		i--
+	}
+
 	// get best coupons
 	productCoupons := make(map[string]*model.Coupon, len(coupons))
 	for _, coupon := range coupons {
@@ -297,13 +324,13 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 			productCoupons[coupon.ProductID] = coupon
 		}
 	}
-	for i, position := range positions {
-		coupon, ok := productCoupons[position.ProductID]
+	for i := 0; i < len(positions); i++ {
+		coupon, ok := productCoupons[positions[i].ProductID]
 		if !ok {
 			continue
 		}
 		// add position for coupon
-		price := -coupon.Discount * position.Price / 100
+		price := -coupon.Discount * positions[i].Price / 100
 		couponPosition := model.Position{
 			Quantity:   1,
 			Price:      price,
@@ -312,6 +339,7 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 		}
 		positions = append(positions[:i+1],
 			append([]model.Position{couponPosition}, positions[i+1:]...)...)
+		i++
 	}
 
 	// non-coupon discounts
@@ -359,9 +387,6 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 		}
 	}
 	if numSets > 0 {
-		price := 4*positions[pearPosition].Product.Price +
-			2*positions[bananaPosition].Product.Price
-		price = 70 * price / 100
 		// reduce pears and bananas
 		positions[pearPosition].Quantity -= numSets * 4
 		positions[pearPosition].Price = positions[pearPosition].Quantity * positions[pearPosition].Product.Price
@@ -377,14 +402,16 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 			positions = append(positions[:bananaPosition], positions[bananaPosition+1:]...)
 		}
 		// update set quantity or add position for sets
+		set := getSpecialProduct("0de17a66-ea59-4032-9383-2603c6c77d25")
 		if setPosition >= 0 {
 			positions[setPosition].Quantity += numSets
+			positions[setPosition].Price += numSets * set.Price
 		} else {
 			positions = append(positions, model.Position{
 				Quantity:  numSets,
-				Price:     numSets * price,
+				Price:     numSets * set.Price,
 				ProductID: "0de17a66-ea59-4032-9383-2603c6c77d25",
-				Product:   getSpecialProduct("0de17a66-ea59-4032-9383-2603c6c77d25", price),
+				Product:   set,
 			})
 		}
 	}

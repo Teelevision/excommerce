@@ -44,6 +44,7 @@ func main() {
 		OrderRepository:       repo,
 		CartRepository:        repo,
 		ProductRepository:     repo,
+		CouponRepository:      repo,
 		PlacedOrderRepository: logRepo,
 	}
 

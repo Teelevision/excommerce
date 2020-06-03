@@ -132,6 +132,10 @@ func (c *Cart) Delete(ctx context.Context, cartID string) error {
 
 func (c *Cart) loadProducts(ctx context.Context, cart *model.Cart) {
 	for i, position := range cart.Positions {
+		if product := getSpecialProduct(position.ProductID); product != nil {
+			cart.Positions[i].Product = product
+			continue
+		}
 		product, err := c.ProductRepository.FindProduct(ctx, position.ProductID)
 		switch {
 		case errors.Is(err, persistence.ErrNotFound):

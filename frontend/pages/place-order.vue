@@ -206,13 +206,7 @@ export default {
       if (this.order == null) {
         return []
       }
-      return this.order.positions.map((p) => ({
-        ...p,
-        product: p.product ||
-          Object.values(this.products).find((pr) => pr.id === p.productId) || {
-            name: 'unknown'
-          }
-      }))
+      return this.order.positions
     }
   },
   beforeMount() {

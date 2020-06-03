@@ -30,7 +30,7 @@ func (c *Product) GetAll(ctx context.Context) ([]*model.Product, error) {
 // Get returns the requested product. ErrNotFound is returned if there is no
 // product with the given id.
 func (c *Product) Get(ctx context.Context, productID string) (*model.Product, error) {
-	if product := getSpecialProduct(productID, 0); product != nil {
+	if product := getSpecialProduct(productID); product != nil {
 		return product, nil
 	}
 	product, err := c.ProductRepository.FindProduct(ctx, productID)
@@ -80,7 +80,7 @@ func (c *Product) GetCoupon(ctx context.Context, code string) (*model.Coupon, er
 	}
 }
 
-func getSpecialProduct(productID string, price int) *model.Product {
+func getSpecialProduct(productID string) *model.Product {
 	switch productID {
 	case "0de17a66-ea59-4032-9383-2603c6c77d25": // set of 4 pears and 2 bananas
 		return &model.Product{
