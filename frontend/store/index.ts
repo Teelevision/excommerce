@@ -63,6 +63,13 @@ export const mutations = {
   },
   orderReceived(state: State, order: Order) {
     state.order = order
+  },
+  clearOrder(state: State) {
+    state.order = initialState().order
+  },
+  orderPlaced(state: State, _order: Order) {
+    mutations.clearOrder(state)
+    state.cart = initialState().cart
   }
 }
 

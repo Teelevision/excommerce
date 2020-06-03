@@ -145,19 +145,47 @@
             </v-container>
           </v-col>
         </v-row>
+        <v-row v-if="success">
+          <v-col>
+            <v-alert type="success">
+              Your order was placed.
+            </v-alert>
+          </v-col>
+        </v-row>
+        <v-row v-if="errorMsg != ''">
+          <v-col>
+            <v-alert type="error">
+              {{ errorMsg }}
+            </v-alert>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col style="text-align: right;">
+            <v-btn
+              :disabled="success || errorMsg != ''"
+              color="primary"
+              @click="placeOrder"
+            >
+              Buy
+            </v-btn>
+          </v-col>
+        </v-row>
       </v-container>
     </v-flex>
   </v-layout>
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex'
+import { mapState, mapMutations } from 'vuex'
+import { OrdersApi, Configuration } from '~/client'
 
 export default {
   data: () => ({
     quantity: [],
     order: null,
-    products: {}
+    products: {},
+    success: false,
+    errorMsg: ''
   }),
   computed: {
     ...mapState({
@@ -193,7 +221,28 @@ export default {
     this.products = this.productsFromState
   },
   methods: {
-    ...mapActions([])
+    ...mapMutations(['orderPlaced', 'clearOrder']),
+    placeOrder() {
+      new OrdersApi(
+        new Configuration({
+          username: this.user.id,
+          password: this.user.password
+        })
+      )
+        .placeOrder(this.order.id)
+        .then(({ data }) => data)
+        .then((order) => this.orderPlaced(order))
+        .then(() => (this.success = true))
+        .catch(({ response: { status } }) => {
+          switch (status) {
+            case 410:
+              this.errorMsg =
+                'The order is not fully available anymore. Please retry ordering your cart.'
+              this.clearOrder()
+              break
+          }
+        })
+    }
   }
 }
 </script>
