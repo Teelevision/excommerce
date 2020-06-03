@@ -227,6 +227,7 @@ func convertPositionsOut(positions []model.Position) []Position {
 	for i, position := range positions {
 		out[i].Quantity = int32(position.Quantity)
 		out[i].Price = float32(position.Price) / 100
+		out[i].SavedPrice = float32(position.SavedPrice) / 100
 		switch {
 		case position.Product != nil:
 			out[i].Product.ID = position.ProductID

@@ -336,6 +336,7 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 			Price:      price,
 			Coupon:     coupon,
 			CouponCode: coupon.Code,
+			SavedPrice: -price,
 		}
 		positions = append(positions[:i+1],
 			append([]model.Position{couponPosition}, positions[i+1:]...)...)
@@ -355,11 +356,13 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 		// insert positions for discount
 		price := -10 * position.Price / 100
 		discountPosition := model.Position{
-			Quantity: 1,
-			Price:    price,
+			Quantity:   1,
+			Price:      price,
+			SavedPrice: -price,
 			Product: &model.Product{ // no id
-				Name:  "10% off apples",
-				Price: price,
+				Name:       "10% off apples",
+				Price:      price,
+				SavedPrice: -price,
 			},
 		}
 		positions = append(positions[:i+1],
@@ -406,12 +409,14 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 		if setPosition >= 0 {
 			positions[setPosition].Quantity += numSets
 			positions[setPosition].Price += numSets * set.Price
+			positions[setPosition].SavedPrice += numSets * set.SavedPrice
 		} else {
 			positions = append(positions, model.Position{
-				Quantity:  numSets,
-				Price:     numSets * set.Price,
-				ProductID: "0de17a66-ea59-4032-9383-2603c6c77d25",
-				Product:   set,
+				Quantity:   numSets,
+				Price:      numSets * set.Price,
+				SavedPrice: numSets * set.SavedPrice,
+				ProductID:  "0de17a66-ea59-4032-9383-2603c6c77d25",
+				Product:    set,
 			})
 		}
 	}

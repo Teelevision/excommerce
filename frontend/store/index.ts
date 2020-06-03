@@ -30,14 +30,14 @@ export const mutations = {
   updateCartPositions(state: State, positions: Position[]) {
     const products: { [key: string]: Position } = {}
     for (const i in positions) {
-      const { quantity, product: p } = positions[i]
+      const { quantity, savedPrice, product: p } = positions[i]
       let { productId } = positions[i]
       if (productId === undefined) {
         productId = `x-${i}`
       }
       let product = products[productId]
       if (product === undefined) {
-        product = { quantity: 0, productId, product: p }
+        product = { quantity: 0, savedPrice, productId, product: p }
       }
       product.quantity += quantity
       product.price = 0
@@ -126,17 +126,21 @@ export const actions = <ActionTreeMutations>{
           .map(({ quantity, productId }) => ({
             quantity,
             product: { id: productId || '', name: '' },
-            price: 0
+            price: 0,
+            savedPrice: 0
           }))
       })
       commit('updateCart', {
         id,
-        positions: positions.map(({ quantity, product, price }) => ({
-          quantity,
-          product,
-          price,
-          productId: product.id
-        }))
+        positions: positions.map(
+          ({ quantity, product, price, savedPrice }) => ({
+            quantity,
+            product,
+            price,
+            savedPrice,
+            productId: product.id
+          })
+        )
       })
     } catch (e) {
       switch (e.response.status) {
@@ -162,12 +166,15 @@ export const actions = <ActionTreeMutations>{
       }
       commit('updateCart', {
         id: cart.id,
-        positions: cart.positions.map(({ quantity, product, price }) => ({
-          quantity,
-          product,
-          price,
-          productId: product.id
-        }))
+        positions: cart.positions.map(
+          ({ quantity, product, price, savedPrice }) => ({
+            quantity,
+            product,
+            price,
+            savedPrice,
+            productId: product.id
+          })
+        )
       })
       break
     }

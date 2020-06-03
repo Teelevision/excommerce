@@ -5,4 +5,5 @@ export class Position {
   product?: Product
   quantity!: number
   price?: number
+  savedPrice?: number
 }

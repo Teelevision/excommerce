@@ -8,4 +8,5 @@ type Position struct {
 	CouponCode string
 	Quantity   int
 	Price      int // in cents
+	SavedPrice int // in cents
 }

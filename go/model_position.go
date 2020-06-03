@@ -19,4 +19,7 @@ type Position struct {
 
 	// The total price of this position.
 	Price float32 `json:"price"`
+
+	// The total savings of this position.
+	SavedPrice float32 `json:"savedPrice,omitempty"`
 }

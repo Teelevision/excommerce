@@ -86,6 +86,21 @@
             }}
           </v-col>
         </v-row>
+        <v-row
+          v-if="totalSaved > 0"
+          class="font-weight-black"
+          :style="{
+            'background-color':
+              positions.length % 2 ? 'rgba(255,255,255,.1)' : 'transparent'
+          }"
+        >
+          <v-col cols="6" sm="6" md="8" class="text-right">
+            SAVED
+          </v-col>
+          <v-col cols="6" sm="3" md="2" class="text-right">
+            EUR {{ totalSaved.toFixed(2) }}
+          </v-col>
+        </v-row>
         <v-row>
           <v-col sm="6" offset-sm="6" class="text-right">
             <v-btn
@@ -110,17 +125,22 @@ export default {
   data: () => ({
     quantity: []
   }),
-  computed: mapState({
-    positions: ({ cart, products }) =>
-      cart.positions.map((p) => ({
-        ...p,
-        product: p.product ||
-          Object.values(products).find((pr) => pr.id === p.productId) || {
-            name: 'unknown',
-            price: 0
-          }
-      }))
-  }),
+  computed: {
+    ...mapState({
+      positions: ({ cart, products }) =>
+        cart.positions.map((p) => ({
+          ...p,
+          product: p.product ||
+            Object.values(products).find((pr) => pr.id === p.productId) || {
+              name: 'unknown',
+              price: 0
+            }
+        }))
+    }),
+    totalSaved() {
+      return this.positions.reduce((prev, p) => prev + (p.savedPrice || 0), 0)
+    }
+  },
   watch: {
     positions() {
       this.updateQuantity()

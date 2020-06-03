@@ -174,6 +174,7 @@ func calculatePositionPrices(positions []model.Position) []model.Position {
 	for i, position := range positions {
 		if position.ProductID != "" {
 			position.Price = position.Quantity * position.Product.Price
+			position.SavedPrice = position.Quantity * position.Product.SavedPrice
 		}
 		result[i] = position
 	}

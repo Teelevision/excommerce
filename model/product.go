@@ -4,6 +4,7 @@ package model
 type Product struct {
 	ID string
 
-	Name  string
-	Price int // in cents
+	Name       string
+	Price      int // in cents
+	SavedPrice int // in cents
 }

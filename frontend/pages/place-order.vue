@@ -51,11 +51,26 @@
               positions.length % 2 ? 'transparent' : 'rgba(255,255,255,.1)'
           }"
         >
-          <v-col cols="6" sm="6" md="8" style="text-align: right;">
+          <v-col cols="6" sm="6" md="8" class="text-right">
             TOTAL
           </v-col>
-          <v-col cols="6" sm="3" md="2" style="text-align: right;">
+          <v-col cols="6" sm="3" md="2" class="text-right">
             EUR {{ order.price.toFixed(2) }}
+          </v-col>
+        </v-row>
+        <v-row
+          v-if="totalSaved > 0"
+          class="font-weight-black"
+          :style="{
+            'background-color':
+              positions.length % 2 ? 'rgba(255,255,255,.1)' : 'transparent'
+          }"
+        >
+          <v-col cols="6" sm="6" md="8" class="text-right">
+            SAVED
+          </v-col>
+          <v-col cols="6" sm="3" md="2" class="text-right">
+            EUR {{ totalSaved.toFixed(2) }}
           </v-col>
         </v-row>
 
@@ -207,6 +222,9 @@ export default {
         return []
       }
       return this.order.positions
+    },
+    totalSaved() {
+      return this.positions.reduce((prev, p) => prev + (p.savedPrice || 0), 0)
     }
   },
   beforeMount() {

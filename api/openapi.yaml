@@ -575,6 +575,12 @@ components:
           readOnly: true
           description: The total price of this position.
           example: 40.11
+        savedPrice:
+          type: number
+          format: float
+          readOnly: true
+          description: The total savings of this position.
+          example: 0.44
 
     Cart:
       description: A cart containing products.

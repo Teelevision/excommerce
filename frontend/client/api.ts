@@ -240,6 +240,12 @@ export interface Position {
      * @memberof Position
      */
     price: number;
+    /**
+     * The total savings of this position.
+     * @type {number}
+     * @memberof Position
+     */
+    savedPrice: number;
 }
 /**
  * A product of the shop.

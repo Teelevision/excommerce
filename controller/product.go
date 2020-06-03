@@ -84,9 +84,10 @@ func getSpecialProduct(productID string) *model.Product {
 	switch productID {
 	case "0de17a66-ea59-4032-9383-2603c6c77d25": // set of 4 pears and 2 bananas
 		return &model.Product{
-			ID:    "0de17a66-ea59-4032-9383-2603c6c77d25",
-			Name:  "Set of 4 pears and 2 bananas (30% off)",
-			Price: 444,
+			ID:         "0de17a66-ea59-4032-9383-2603c6c77d25",
+			Name:       "Set of 4 pears and 2 bananas (30% off)",
+			Price:      444,
+			SavedPrice: 190,
 		}
 	default:
 		return nil
