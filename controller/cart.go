@@ -34,7 +34,7 @@ func (c *Cart) Get(ctx context.Context, cartID string) (*model.Cart, error) {
 	case err == nil:
 		// load products
 		c.loadProducts(ctx, cart)
-		cart.Positions = calculateCartPositionPrices(cart.Positions)
+		cart.Positions = calculatePositionPrices(cart.Positions)
 		return cart, nil
 	default:
 		panic(err)
@@ -49,7 +49,7 @@ func (c *Cart) GetAllUnlocked(ctx context.Context) ([]*model.Cart, error) {
 	case err == nil:
 		for _, cart := range carts {
 			c.loadProducts(ctx, cart)
-			cart.Positions = calculateCartPositionPrices(cart.Positions)
+			cart.Positions = calculatePositionPrices(cart.Positions)
 		}
 		return carts, nil
 	default:
@@ -70,7 +70,8 @@ func (c *Cart) CreateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 	case errors.Is(err, persistence.ErrConflict):
 		return nil, ErrConflict
 	case err == nil:
-		cart.Positions = calculateCartPositionPrices(cart.Positions)
+		cart.Positions = consolidatePositions(cart.Positions)
+		cart.Positions = calculatePositionPrices(cart.Positions)
 		return cart, nil
 	default:
 		panic(err)
@@ -98,7 +99,8 @@ func (c *Cart) UpdateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 	case errors.Is(err, persistence.ErrLocked):
 		return nil, ErrLocked
 	case err == nil:
-		cart.Positions = calculateCartPositionPrices(cart.Positions)
+		cart.Positions = consolidatePositions(cart.Positions)
+		cart.Positions = calculatePositionPrices(cart.Positions)
 		return cart, nil
 	default:
 		panic(err)
@@ -145,10 +147,32 @@ func (c *Cart) loadProducts(ctx context.Context, cart *model.Cart) {
 	}
 }
 
-func calculateCartPositionPrices(positions []model.Position) []model.Position {
+// combines positions for the same product
+func consolidatePositions(positions []model.Position) []model.Position {
+	consolidated := make(map[string]model.Position, len(positions))
+	order := make([]string, 0, len(positions))
+	for _, position := range positions {
+		existingPosition, ok := consolidated[position.ProductID]
+		position.Quantity += existingPosition.Quantity
+		position.Price += existingPosition.Price
+		consolidated[position.ProductID] = position
+		if !ok {
+			order = append(order, position.ProductID)
+		}
+	}
+	result := make([]model.Position, len(order))
+	for i, productID := range order {
+		result[i] = consolidated[productID]
+	}
+	return result
+}
+
+func calculatePositionPrices(positions []model.Position) []model.Position {
 	result := make([]model.Position, len(positions))
 	for i, position := range positions {
-		position.Price = position.Quantity * position.Product.Price
+		if position.ProductID != "" {
+			position.Price = position.Quantity * position.Product.Price
+		}
 		result[i] = position
 	}
 	return result

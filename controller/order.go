@@ -32,8 +32,7 @@ func (c *Order) CreateAndGet(ctx context.Context, order *model.Order) (*model.Or
 	id := uuid.String()
 
 	// prepare positions
-	positions := calculateCartPositionPrices(order.Cart.Positions)
-	positions = generateOrderPositions(positions, order.Coupons)
+	positions := generateOrderPositions(order.Cart.Positions, order.Coupons)
 
 	// hash
 	hash := hashPositions(positions)
@@ -208,8 +207,7 @@ func (c *Order) preparePlace(ctx context.Context, orderID string, expectLocked b
 	}
 
 	// prepare positions
-	positions := calculateCartPositionPrices(order.Cart.Positions)
-	positions = generateOrderPositions(positions, order.Coupons)
+	positions := generateOrderPositions(order.Cart.Positions, order.Coupons)
 
 	// hash
 	hash := hashPositions(positions)
@@ -288,6 +286,9 @@ func (c *Order) Delete(ctx context.Context, orderID string) error {
 }
 
 func generateOrderPositions(positions []model.Position, coupons []*model.Coupon) []model.Position {
+	positions = consolidatePositions(positions)
+	positions = calculatePositionPrices(positions)
+
 	// get best coupons
 	productCoupons := make(map[string]*model.Coupon, len(coupons))
 	for _, coupon := range coupons {
@@ -296,23 +297,96 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 			productCoupons[coupon.ProductID] = coupon
 		}
 	}
-	out := make([]model.Position, 0, len(positions)+len(productCoupons))
-	for _, position := range positions {
-		out = append(out, position)
+	for i, position := range positions {
 		coupon, ok := productCoupons[position.ProductID]
 		if !ok {
 			continue
 		}
 		// add position for coupon
 		price := -coupon.Discount * position.Price / 100
-		out = append(out, model.Position{
+		couponPosition := model.Position{
 			Quantity:   1,
 			Price:      price,
 			Coupon:     coupon,
 			CouponCode: coupon.Code,
+		}
+		positions = append(positions[:i+1],
+			append([]model.Position{couponPosition}, positions[i+1:]...)...)
+	}
+
+	// non-coupon discounts
+
+	// If >=7 apples, 10% discount on all apples.
+	for i, position := range positions {
+		if position.ProductID != "a6da78f8-2be6-49ff-b40a-32aa86a6a986" {
+			continue
+		}
+		if position.Quantity < 7 {
+			continue
+		}
+		// insert positions for discount
+		price := -10 * position.Price / 100
+		discountPosition := model.Position{
+			Quantity:  1,
+			Price:     price,
+			ProductID: "16003e2b-0119-4367-8d59-586ebac11ebe",
+			Product: &model.Product{
+				ID:    "16003e2b-0119-4367-8d59-586ebac11ebe",
+				Name:  "10% off apples",
+				Price: price,
+			},
+		}
+		positions = append(positions[:i+1],
+			append([]model.Position{discountPosition}, positions[i+1:]...)...)
+		break
+	}
+
+	// Sets of 4 pears and 2 bananas get a 30% discount.
+	var pearPosition, bananaPosition int
+	for i, position := range positions {
+		switch position.ProductID {
+		case "5438bfe8-6bd2-4a88-ac36-ec29716eb6d7": // pear
+			pearPosition = i
+		case "b16088e1-9603-4676-a8df-130823cf15a5": // banana
+			bananaPosition = i
+		}
+	}
+	numSets := positions[pearPosition].Quantity / 4
+	if n := positions[bananaPosition].Quantity / 2; n < numSets {
+		numSets = n
+	}
+	if numSets > 0 {
+		price := 4*positions[pearPosition].Product.Price +
+			2*positions[bananaPosition].Product.Price
+		price = 70 * price / 100
+		// reduce pears and bananas
+		positions[pearPosition].Quantity -= numSets * 4
+		positions[pearPosition].Price = positions[pearPosition].Quantity * positions[pearPosition].Product.Price
+		if positions[pearPosition].Quantity == 0 {
+			positions = append(positions[:pearPosition], positions[pearPosition+1:]...)
+			if pearPosition < bananaPosition {
+				bananaPosition--
+			}
+		}
+		positions[bananaPosition].Quantity -= numSets * 2
+		positions[bananaPosition].Price = positions[bananaPosition].Quantity * positions[bananaPosition].Product.Price
+		if positions[bananaPosition].Quantity == 0 {
+			positions = append(positions[:bananaPosition], positions[bananaPosition+1:]...)
+		}
+		// add position for sets
+		positions = append(positions, model.Position{
+			Quantity:  numSets,
+			Price:     numSets * price,
+			ProductID: "0de17a66-ea59-4032-9383-2603c6c77d25",
+			Product: &model.Product{
+				ID:    "0de17a66-ea59-4032-9383-2603c6c77d25",
+				Name:  "Set of 4 pears and 2 bananas (30% off)",
+				Price: price,
+			},
 		})
 	}
-	return out
+
+	return positions
 }
 
 func calculatePositionSum(positions []model.Position) (sum int) {
