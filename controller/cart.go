@@ -34,7 +34,7 @@ func (c *Cart) Get(ctx context.Context, cartID string) (*model.Cart, error) {
 	case err == nil:
 		// load products
 		c.loadProducts(ctx, cart)
-		cart.Positions = calculatePositionPrices(cart.Positions)
+		cart.Positions = generateOrderPositions(cart.Positions, nil)
 		return cart, nil
 	default:
 		panic(err)
@@ -49,7 +49,7 @@ func (c *Cart) GetAllUnlocked(ctx context.Context) ([]*model.Cart, error) {
 	case err == nil:
 		for _, cart := range carts {
 			c.loadProducts(ctx, cart)
-			cart.Positions = calculatePositionPrices(cart.Positions)
+			cart.Positions = generateOrderPositions(cart.Positions, nil)
 		}
 		return carts, nil
 	default:
@@ -70,8 +70,7 @@ func (c *Cart) CreateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 	case errors.Is(err, persistence.ErrConflict):
 		return nil, ErrConflict
 	case err == nil:
-		cart.Positions = consolidatePositions(cart.Positions)
-		cart.Positions = calculatePositionPrices(cart.Positions)
+		cart.Positions = generateOrderPositions(cart.Positions, nil)
 		return cart, nil
 	default:
 		panic(err)
@@ -99,8 +98,7 @@ func (c *Cart) UpdateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 	case errors.Is(err, persistence.ErrLocked):
 		return nil, ErrLocked
 	case err == nil:
-		cart.Positions = consolidatePositions(cart.Positions)
-		cart.Positions = calculatePositionPrices(cart.Positions)
+		cart.Positions = generateOrderPositions(cart.Positions, nil)
 		return cart, nil
 	default:
 		panic(err)

@@ -227,14 +227,14 @@ func convertPositionsOut(positions []model.Position) []Position {
 	for i, position := range positions {
 		out[i].Quantity = int32(position.Quantity)
 		out[i].Price = float32(position.Price) / 100
-		if position.ProductID != "" {
+		switch {
+		case position.Product != nil:
 			out[i].Product.ID = position.ProductID
 			if position.Product != nil {
 				out[i].Product.Name = position.Product.Name
 				out[i].Product.Price = float32(position.Product.Price) / 100
 			}
-		}
-		if position.Coupon != nil {
+		case position.Coupon != nil:
 			out[i].Product.Name = position.Coupon.Name
 			out[i].Product.Price = out[i].Price / float32(out[i].Quantity)
 		}

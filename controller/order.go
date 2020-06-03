@@ -327,11 +327,9 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 		// insert positions for discount
 		price := -10 * position.Price / 100
 		discountPosition := model.Position{
-			Quantity:  1,
-			Price:     price,
-			ProductID: "16003e2b-0119-4367-8d59-586ebac11ebe",
-			Product: &model.Product{
-				ID:    "16003e2b-0119-4367-8d59-586ebac11ebe",
+			Quantity: 1,
+			Price:    price,
+			Product: &model.Product{ // no id
 				Name:  "10% off apples",
 				Price: price,
 			},
@@ -342,13 +340,15 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 	}
 
 	// Sets of 4 pears and 2 bananas get a 30% discount.
-	pearPosition, bananaPosition := -1, -1
+	pearPosition, bananaPosition, setPosition := -1, -1, -1
 	for i, position := range positions {
 		switch position.ProductID {
 		case "5438bfe8-6bd2-4a88-ac36-ec29716eb6d7": // pear
 			pearPosition = i
 		case "b16088e1-9603-4676-a8df-130823cf15a5": // banana
 			bananaPosition = i
+		case "0de17a66-ea59-4032-9383-2603c6c77d25": // set
+			setPosition = i
 		}
 	}
 	var numSets int
@@ -376,17 +376,17 @@ func generateOrderPositions(positions []model.Position, coupons []*model.Coupon)
 		if positions[bananaPosition].Quantity == 0 {
 			positions = append(positions[:bananaPosition], positions[bananaPosition+1:]...)
 		}
-		// add position for sets
-		positions = append(positions, model.Position{
-			Quantity:  numSets,
-			Price:     numSets * price,
-			ProductID: "0de17a66-ea59-4032-9383-2603c6c77d25",
-			Product: &model.Product{
-				ID:    "0de17a66-ea59-4032-9383-2603c6c77d25",
-				Name:  "Set of 4 pears and 2 bananas (30% off)",
-				Price: price,
-			},
-		})
+		// update set quantity or add position for sets
+		if setPosition >= 0 {
+			positions[setPosition].Quantity += numSets
+		} else {
+			positions = append(positions, model.Position{
+				Quantity:  numSets,
+				Price:     numSets * price,
+				ProductID: "0de17a66-ea59-4032-9383-2603c6c77d25",
+				Product:   getSpecialProduct("0de17a66-ea59-4032-9383-2603c6c77d25", price),
+			})
+		}
 	}
 
 	return positions

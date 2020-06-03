@@ -29,21 +29,26 @@ export const mutations = {
   },
   updateCartPositions(state: State, positions: Position[]) {
     const products: { [key: string]: Position } = {}
-    for (const { productId, quantity } of positions) {
+    for (const i in positions) {
+      const { quantity, product: p } = positions[i]
+      let { productId } = positions[i]
       if (productId === undefined) {
-        continue
+        productId = `x-${i}`
       }
       let product = products[productId]
       if (product === undefined) {
-        product = { quantity: 0, productId }
+        product = { quantity: 0, productId, product: p }
       }
       product.quantity += quantity
       product.price = 0
       products[productId] = product
     }
     positions = []
-    for (const product of Object.values(products)) {
+    for (let product of Object.values(products)) {
       if (product.quantity <= 0) continue
+      if (product.productId?.startsWith('x-')) {
+        product = { ...product, productId: undefined }
+      }
       positions.push(product)
     }
     state.cart.positions = positions

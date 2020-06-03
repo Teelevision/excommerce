@@ -32,6 +32,7 @@
           </v-col>
           <v-col cols="6" sm="3" md="2" order-sm="4">
             <v-text-field
+              v-if="position.product.id"
               v-model.number="quantity[i]"
               type="number"
               label="Quantity"
@@ -115,10 +116,16 @@ export default {
         ...p,
         product: p.product ||
           Object.values(products).find((pr) => pr.id === p.productId) || {
-            name: 'unknown'
+            name: 'unknown',
+            price: 0
           }
       }))
   }),
+  watch: {
+    positions() {
+      this.updateQuantity()
+    }
+  },
   mounted() {
     this.updateQuantity()
   },
