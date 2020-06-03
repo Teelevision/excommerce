@@ -27,7 +27,9 @@
             {{ position.product.name }}
           </v-col>
           <v-col cols="12" sm="3" md="2" style="text-align: right;">
-            EUR {{ position.product.price.toFixed(2) }}
+            <span v-if="position.quantity != 1">
+              EUR {{ position.product.price.toFixed(2) }}
+            </span>
           </v-col>
           <v-col cols="12" sm="3" md="2" style="text-align: right;">
             EUR {{ position.price.toFixed(2) }}
