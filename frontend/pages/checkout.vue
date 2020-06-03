@@ -106,8 +106,10 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col style="text-align: right;">
-            <v-btn color="primary" @click="storeOrder">Proceed</v-btn>
+          <v-col sm="4" offset-sm="8" class="text-right">
+            <v-btn block large color="primary" @click="storeOrder">
+              Proceed
+            </v-btn>
           </v-col>
         </v-row>
       </v-container>

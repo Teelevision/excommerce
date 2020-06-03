@@ -16,7 +16,7 @@
       </nuxt-link>
       <v-btn v-if="user.id" text @click="doLogout">
         <v-icon left>mdi-account-circle</v-icon>
-        Logout ({{ user.name }})
+        Logout <span class="d-none d-sm-inline">({{ user.name }})</span>
       </v-btn>
       <nuxt-link to="/cart" style="text-decoration: none;">
         <v-btn icon>
@@ -27,7 +27,7 @@
       </nuxt-link>
     </v-app-bar>
     <v-content>
-      <v-container>
+      <v-container style="max-width: 1000px;">
         <nuxt />
       </v-container>
     </v-content>

@@ -2,17 +2,17 @@
   <v-layout>
     <v-flex class="text-center">
       <v-container v-if="order !== null">
-        <v-row class="d-none d-md-flex">
-          <v-col cols="12" sm="3" md="6" style="text-align: left;">
+        <v-row class="d-none d-sm-flex">
+          <v-col cols="12" sm="3" md="6" class="text-left">
             <small>Product</small>
           </v-col>
-          <v-col cols="12" sm="3" md="2" style="text-align: right;">
+          <v-col cols="12" sm="3" md="2" class="text-right">
             <small>Price per item</small>
           </v-col>
-          <v-col cols="12" sm="3" md="2" style="text-align: right;">
+          <v-col cols="12" sm="3" md="2" class="text-right">
             <small>Price</small>
           </v-col>
-          <v-col cols="12" sm="3" md="2">
+          <v-col cols="12" sm="3" md="2" class="text-right">
             <small>Quantity</small>
           </v-col>
         </v-row>
@@ -23,19 +23,25 @@
             'background-color': i % 2 ? 'transparent' : 'rgba(255,255,255,.1)'
           }"
         >
-          <v-col cols="12" sm="3" md="6" style="text-align: left;">
+          <v-col cols="6" sm="3" md="6" class="text-left">
             {{ position.product.name }}
           </v-col>
-          <v-col cols="12" sm="3" md="2" style="text-align: right;">
-            <span v-if="position.quantity != 1">
+          <v-col cols="6" sm="3" md="2" order-sm="4" class="text-right">
+            <span class="d-none d-sm-inline">
+              {{ position.quantity }}
+            </span>
+            <span class="d-sm-none">x {{ position.quantity }}</span>
+          </v-col>
+          <v-col cols="6" sm="3" md="2" class="text-left text-sm-right">
+            <span v-if="position.quantity != 1" class="d-none d-sm-inline">
               EUR {{ position.product.price.toFixed(2) }}
             </span>
+            <small v-if="position.quantity != 1" class="d-sm-none">
+              EUR {{ position.product.price.toFixed(2) }} / item
+            </small>
           </v-col>
-          <v-col cols="12" sm="3" md="2" style="text-align: right;">
+          <v-col cols="6" sm="3" md="2" class="text-right">
             EUR {{ position.price.toFixed(2) }}
-          </v-col>
-          <v-col cols="12" sm="3" md="2">
-            {{ position.quantity }}
           </v-col>
         </v-row>
         <v-row
@@ -160,8 +166,10 @@
           </v-col>
         </v-row>
         <v-row>
-          <v-col style="text-align: right;">
+          <v-col sm="4" offset-sm="8" class="text-right">
             <v-btn
+              block
+              large
               :disabled="success || errorMsg != ''"
               color="primary"
               @click="placeOrder"

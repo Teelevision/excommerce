@@ -3,9 +3,9 @@
     <v-flex class="text-center">
       <v-container fluid>
         <v-row>
-          <v-col v-for="product in products" :key="product.id" cols="6">
+          <v-col v-for="product in products" :key="product.id" sm="6">
             <v-card>
-              <v-img :src="product.img" max-height="300px" max-width="500px">
+              <v-img :src="product.img">
                 <v-card-title
                   style="color: rgba(0, 0, 0, 0.87);"
                   v-text="product.name"
