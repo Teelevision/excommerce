@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 	"unicode/utf8"
 
 	"github.com/Teelevision/excommerce/controller"
@@ -30,16 +29,16 @@ type UsersAPI struct {
 func (c *UsersAPI) Routes() Routes {
 	return Routes{
 		{
-			"Login",
-			strings.ToUpper("Post"),
-			"/beta/users/login",
-			c.Login,
+			Name:        "Login",
+			Method:      "POST",
+			Path:        "/beta/users/login",
+			HandlerFunc: c.Login,
 		},
 		{
-			"Register",
-			strings.ToUpper("Post"),
-			"/beta/users",
-			c.Register,
+			Name:        "Register",
+			Method:      "POST",
+			Path:        "/beta/users",
+			HandlerFunc: c.Register,
 		},
 	}
 }

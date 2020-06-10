@@ -35,16 +35,16 @@ type ProductsAPI struct {
 func (c *ProductsAPI) Routes() Routes {
 	return Routes{
 		{
-			"GetAllProducts",
-			strings.ToUpper("Get"),
-			"/beta/products",
-			c.GetAllProducts,
+			Name:        "GetAllProducts",
+			Method:      "GET",
+			Path:        "/beta/products",
+			HandlerFunc: c.GetAllProducts,
 		},
 		{
-			"StoreCouponForProduct",
-			strings.ToUpper("Put"),
-			"/beta/products/{productId}/coupons/{couponCode}",
-			c.Authenticator.HandlerFunc(c.StoreCouponForProduct),
+			Name:        "StoreCouponForProduct",
+			Method:      "PUT",
+			Path:        "/beta/products/{productId}/coupons/{couponCode}",
+			HandlerFunc: c.Authenticator.HandlerFunc(c.StoreCouponForProduct),
 		},
 	}
 }

@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
-	"strings"
 
 	"github.com/Teelevision/excommerce/authentication"
 	"github.com/Teelevision/excommerce/controller"
@@ -36,28 +35,28 @@ type CartsAPI struct {
 func (c *CartsAPI) Routes() Routes {
 	return Routes{
 		{
-			"DeleteCart",
-			strings.ToUpper("Delete"),
-			"/beta/carts/{cartId}",
-			c.Authenticator.HandlerFunc(c.DeleteCart),
+			Name:        "DeleteCart",
+			Method:      "DELETE",
+			Path:        "/beta/carts/{cartId}",
+			HandlerFunc: c.Authenticator.HandlerFunc(c.DeleteCart),
 		},
 		{
-			"GetAllCarts",
-			strings.ToUpper("Get"),
-			"/beta/carts",
-			c.Authenticator.HandlerFunc(c.GetAllCarts),
+			Name:        "GetAllCarts",
+			Method:      "GET",
+			Path:        "/beta/carts",
+			HandlerFunc: c.Authenticator.HandlerFunc(c.GetAllCarts),
 		},
 		{
-			"GetCart",
-			strings.ToUpper("Get"),
-			"/beta/carts/{cartId}",
-			c.Authenticator.HandlerFunc(c.GetCart),
+			Name:        "GetCart",
+			Method:      "GET",
+			Path:        "/beta/carts/{cartId}",
+			HandlerFunc: c.Authenticator.HandlerFunc(c.GetCart),
 		},
 		{
-			"StoreCart",
-			strings.ToUpper("Put"),
-			"/beta/carts/{cartId}",
-			c.Authenticator.HandlerFunc(c.StoreCart),
+			Name:        "StoreCart",
+			Method:      "PUT",
+			Path:        "/beta/carts/{cartId}",
+			HandlerFunc: c.Authenticator.HandlerFunc(c.StoreCart),
 		},
 	}
 }

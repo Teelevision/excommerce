@@ -38,16 +38,16 @@ type OrdersAPI struct {
 func (c *OrdersAPI) Routes() Routes {
 	return Routes{
 		{
-			"CreateOrderFromCart",
-			strings.ToUpper("Post"),
-			"/beta/carts/{cartId}/prepareOrder",
-			c.Authenticator.HandlerFunc(c.CreateOrderFromCart),
+			Name:        "CreateOrderFromCart",
+			Method:      "POST",
+			Path:        "/beta/carts/{cartId}/prepareOrder",
+			HandlerFunc: c.Authenticator.HandlerFunc(c.CreateOrderFromCart),
 		},
 		{
-			"PlaceOrder",
-			strings.ToUpper("Post"),
-			"/beta/orders/{orderId}/place",
-			c.Authenticator.HandlerFunc(c.PlaceOrder),
+			Name:        "PlaceOrder",
+			Method:      "POST",
+			Path:        "/beta/orders/{orderId}/place",
+			HandlerFunc: c.Authenticator.HandlerFunc(c.PlaceOrder),
 		},
 	}
 }
