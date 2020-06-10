@@ -16,6 +16,7 @@ import (
 	"os"
 	"strconv"
 
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -40,18 +41,15 @@ func NewRouter(routers ...Router) *mux.Router {
 	router := mux.NewRouter().StrictSlash(true)
 	for _, api := range routers {
 		for _, route := range api.Routes() {
-			var handler http.Handler
-			handler = route.HandlerFunc
-			handler = logger(handler, route.Name)
-
 			router.
 				Methods(route.Method).
 				Path(route.Path).
 				Name(route.Name).
-				Handler(handler)
+				Handler(route.HandlerFunc)
 		}
 	}
 
+	handlers.LoggingHandler(os.Stdout, router)
 	return router
 }
 

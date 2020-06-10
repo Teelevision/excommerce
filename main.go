@@ -13,6 +13,7 @@ import (
 	"context"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/Teelevision/excommerce/authentication"
 	"github.com/Teelevision/excommerce/controller"
@@ -74,12 +75,27 @@ func main() {
 	router.PathPrefix("/beta/static/").
 		Handler(http.StripPrefix("/beta/static/", http.FileServer(http.Dir("./static/"))))
 
-	log.Fatal(http.ListenAndServe(":8080",
-		handlers.CORS(
-			handlers.AllowedOrigins([]string{"http://localhost:3000"}),
-			handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"}),
-			handlers.AllowedHeaders([]string{"X-Requested-With", "Content-Type", "Authorization"}),
-		)(router)))
+	var handler http.Handler = router
+
+	// logging
+	handler = handlers.CombinedLoggingHandler(os.Stdout, router)
+
+	// CORS
+	handler = handlers.CORS(
+		handlers.AllowedOrigins([]string{
+			"http://localhost:3000", // frontend
+		}),
+		handlers.AllowedMethods([]string{
+			"HEAD", "GET", "POST", "PUT", "DELETE",
+		}),
+		handlers.AllowedHeaders([]string{
+			"X-Requested-With",
+			"Content-Type",
+			"Authorization",
+		}),
+	)(handler)
+
+	log.Fatal(http.ListenAndServe(":8080", handler))
 }
 
 func initAdmin(ctx context.Context, r persistence.UserRepository) {
