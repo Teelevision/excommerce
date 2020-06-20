@@ -10,6 +10,7 @@
 package openapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -82,6 +83,8 @@ func (c *CartsAPI) DeleteCart(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusGone) // 410
 	case errors.Is(err, controller.ErrLocked):
 		w.WriteHeader(http.StatusLocked) // 423
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		w.WriteHeader(http.StatusNoContent) // 204
 	default:
@@ -102,6 +105,8 @@ func (c *CartsAPI) GetAllCarts(w http.ResponseWriter, r *http.Request) {
 	// action
 	carts, err := c.CartController.GetAllUnlocked(r.Context())
 	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		out := make([]*Cart, len(carts))
 		for i, cart := range carts {
@@ -132,6 +137,8 @@ func (c *CartsAPI) GetCart(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound) // 404
 	case errors.Is(err, controller.ErrDeleted):
 		w.WriteHeader(http.StatusGone) // 410
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		EncodeJSONResponse(convertCartOut(cart), nil, w)
 	default:
@@ -180,6 +187,9 @@ func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, controller.ErrNotFound):
 			failValidation("The product is not available.", fmt.Sprintf("/positions/%d/product/id", i), w)
 			return
+		case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+			w.WriteHeader(499) // client closed request
+			return
 		case err == nil:
 			cartInput.Positions[i].Product = product
 		default:
@@ -202,6 +212,8 @@ func (c *CartsAPI) StoreCart(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusGone) // 410
 	case errors.Is(err, controller.ErrLocked):
 		w.WriteHeader(http.StatusLocked) // 423
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		status := http.StatusOK // 200
 		if !existed {

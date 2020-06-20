@@ -10,6 +10,7 @@
 package openapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -56,6 +57,8 @@ func (c *UsersAPI) Login(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case errors.Is(err, controller.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound) // 404
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		EncodeJSONResponse(&User{
 			ID:   u.ID,
@@ -89,6 +92,8 @@ func (c *UsersAPI) Register(w http.ResponseWriter, r *http.Request) {
 	switch {
 	case errors.Is(err, controller.ErrConflict):
 		w.WriteHeader(http.StatusConflict) // 409
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		EncodeJSONResponse(&User{
 			ID:   u.ID,

@@ -31,9 +31,13 @@ func (c *Cart) Get(ctx context.Context, cartID string) (*model.Cart, error) {
 		return nil, ErrDeleted
 	case errors.Is(err, persistence.ErrNotOwnedByUser):
 		return nil, ErrForbidden
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		// load products
-		c.loadProducts(ctx, cart)
+		if err := c.loadProducts(ctx, cart); err != nil {
+			return nil, err
+		}
 		cart.Positions = generateOrderPositions(cart.Positions, nil)
 		return cart, nil
 	default:
@@ -46,9 +50,13 @@ func (c *Cart) GetAllUnlocked(ctx context.Context) ([]*model.Cart, error) {
 	carts, err := c.CartRepository.FindAllUnlockedCartsOfUser(ctx,
 		authentication.AuthenticatedUser(ctx).ID)
 	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		for _, cart := range carts {
-			c.loadProducts(ctx, cart)
+			if err := c.loadProducts(ctx, cart); err != nil {
+				return nil, err
+			}
 			cart.Positions = generateOrderPositions(cart.Positions, nil)
 		}
 		return carts, nil
@@ -69,6 +77,8 @@ func (c *Cart) CreateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 	switch {
 	case errors.Is(err, persistence.ErrConflict):
 		return nil, ErrConflict
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		cart.Positions = generateOrderPositions(cart.Positions, nil)
 		return cart, nil
@@ -97,6 +107,8 @@ func (c *Cart) UpdateAndGet(ctx context.Context, cart *model.Cart) (*model.Cart,
 		return nil, ErrForbidden
 	case errors.Is(err, persistence.ErrLocked):
 		return nil, ErrLocked
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		cart.Positions = generateOrderPositions(cart.Positions, nil)
 		return cart, nil
@@ -123,6 +135,8 @@ func (c *Cart) Delete(ctx context.Context, cartID string) error {
 		return ErrForbidden
 	case errors.Is(err, persistence.ErrLocked):
 		return ErrLocked
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
 	case err == nil:
 		return nil
 	default:
@@ -130,7 +144,7 @@ func (c *Cart) Delete(ctx context.Context, cartID string) error {
 	}
 }
 
-func (c *Cart) loadProducts(ctx context.Context, cart *model.Cart) {
+func (c *Cart) loadProducts(ctx context.Context, cart *model.Cart) error {
 	for i, position := range cart.Positions {
 		if product := getSpecialProduct(position.ProductID); product != nil {
 			cart.Positions[i].Product = product
@@ -141,12 +155,15 @@ func (c *Cart) loadProducts(ctx context.Context, cart *model.Cart) {
 		case errors.Is(err, persistence.ErrNotFound):
 			cart.Positions[i].ProductID = ""
 			cart.Positions[i].Product = &model.Product{Name: "Product not available anymore."}
+		case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+			return err
 		case err == nil:
 			cart.Positions[i].Product = product
 		default:
 			panic(err)
 		}
 	}
+	return nil
 }
 
 // combines positions for the same product

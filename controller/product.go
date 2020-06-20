@@ -20,6 +20,8 @@ type Product struct {
 func (c *Product) GetAll(ctx context.Context) ([]*model.Product, error) {
 	products, err := c.ProductRepository.FindAllProducts(ctx)
 	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		return products, nil
 	default:
@@ -37,6 +39,8 @@ func (c *Product) Get(ctx context.Context, productID string) (*model.Product, er
 	switch {
 	case errors.Is(err, persistence.ErrNotFound):
 		return nil, ErrNotFound
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		return &model.Product{
 			ID:    product.ID,
@@ -59,6 +63,8 @@ func (c *Product) SaveCoupon(ctx context.Context, coupon *model.Coupon) (*model.
 
 	err := c.CouponRepository.StoreCoupon(ctx, coupon.Code, coupon.Name, coupon.Product.ID, coupon.Discount, coupon.ExpiresAt)
 	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		return coupon, nil
 	default:
@@ -73,6 +79,8 @@ func (c *Product) GetCoupon(ctx context.Context, code string) (*model.Coupon, er
 	switch {
 	case errors.Is(err, persistence.ErrNotFound):
 		return nil, ErrNotFound
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		return coupon, nil
 	default:

@@ -10,6 +10,7 @@
 package openapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -53,6 +54,8 @@ func (c *ProductsAPI) Routes() Routes {
 func (c *ProductsAPI) GetAllProducts(w http.ResponseWriter, r *http.Request) {
 	products, err := c.ProductController.GetAll(r.Context())
 	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		result := make([]Product, len(products))
 		for i, product := range products {
@@ -119,6 +122,9 @@ func (c *ProductsAPI) StoreCouponForProduct(w http.ResponseWriter, r *http.Reque
 	case errors.Is(err, controller.ErrNotFound):
 		w.WriteHeader(http.StatusNotFound) // 404
 		return
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
+		return
 	case err == nil:
 		couponInput.Product = product
 	default:
@@ -128,6 +134,8 @@ func (c *ProductsAPI) StoreCouponForProduct(w http.ResponseWriter, r *http.Reque
 	// action
 	couponOutput, err := c.ProductController.SaveCoupon(ctx, &couponInput)
 	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		EncodeJSONResponse(&Coupon{
 			Code:      couponOutput.Code,

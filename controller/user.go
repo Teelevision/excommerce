@@ -31,6 +31,8 @@ func (c *User) Create(ctx context.Context, name, password string) (*model.User, 
 	switch {
 	case errors.Is(err, persistence.ErrConflict):
 		return nil, fmt.Errorf("%w: %s", ErrConflict, err)
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		return &model.User{
 			ID:   id,
@@ -48,6 +50,8 @@ func (c *User) GetByNameAndPassword(ctx context.Context, name, password string) 
 	switch {
 	case errors.Is(err, persistence.ErrNotFound):
 		return nil, fmt.Errorf("%w: %s", ErrNotFound, err)
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		return user, nil
 	default:

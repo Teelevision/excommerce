@@ -10,6 +10,7 @@
 package openapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -145,6 +146,9 @@ func (c *OrdersAPI) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) 
 	case errors.Is(err, controller.ErrDeleted):
 		w.WriteHeader(http.StatusGone) // 410
 		return
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
+		return
 	case err == nil && cart.Locked:
 		w.WriteHeader(http.StatusLocked) // 423
 		return
@@ -161,6 +165,9 @@ func (c *OrdersAPI) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) 
 			failValidation(fmt.Sprintf("The coupon %q is incorrect or expired.", code),
 				fmt.Sprintf("/coupons/%d", i), w)
 			return
+		case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+			w.WriteHeader(499) // client closed request
+			return
 		case err == nil:
 			orderInput.Coupons[i] = coupon
 		default:
@@ -171,6 +178,8 @@ func (c *OrdersAPI) CreateOrderFromCart(w http.ResponseWriter, r *http.Request) 
 	// action
 	order, err := c.OrderController.CreateAndGet(ctx, &orderInput)
 	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		EncodeJSONResponse(convertOrderOut(order, "valid"), nil, w)
 	default:
@@ -199,6 +208,8 @@ func (c *OrdersAPI) PlaceOrder(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusGone) // 410
 	case errors.Is(err, controller.ErrLocked):
 		w.WriteHeader(http.StatusLocked) // 423
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		w.WriteHeader(499) // client closed request
 	case err == nil:
 		EncodeJSONResponse(convertOrderOut(order, "placed"), nil, w)
 	default:

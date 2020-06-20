@@ -58,6 +58,8 @@ func (c *Order) CreateAndGet(ctx context.Context, order *model.Order) (*model.Or
 	switch {
 	case errors.Is(err, persistence.ErrConflict):
 		panic(err)
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		return &model.Order{
 			ID:        id,
@@ -131,11 +133,14 @@ func (c *Order) Place(ctx context.Context, orderID string) (*model.Order, error)
 		}
 	}
 	err = c.PlacedOrderRepository.PlaceOrder(ctx, placedOrder)
-	if err != nil {
+	switch {
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
+	case err == nil:
+		return order, nil
+	default:
 		panic(err)
 	}
-
-	return order, nil
 }
 
 // Must be called twice. First time it expects the order and cart to be
@@ -161,6 +166,8 @@ func (c *Order) preparePlace(ctx context.Context, orderID string, expectLocked b
 		return nil, ErrDeleted
 	case errors.Is(err, persistence.ErrNotOwnedByUser):
 		return nil, ErrForbidden
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		if !expectLocked && order.Locked {
 			return nil, ErrLocked
@@ -186,6 +193,8 @@ func (c *Order) preparePlace(ctx context.Context, orderID string, expectLocked b
 		return nil, deleteOrder()
 	case errors.Is(err, persistence.ErrNotOwnedByUser):
 		return nil, deleteOrder()
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		if !expectLocked && order.Cart.Locked {
 			return nil, deleteOrder()
@@ -204,6 +213,8 @@ func (c *Order) preparePlace(ctx context.Context, orderID string, expectLocked b
 		switch {
 		case errors.Is(err, persistence.ErrNotFound):
 			return nil, deleteOrder()
+		case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+			return nil, err
 		case err == nil:
 			order.Cart.Positions[i].Product = product
 		default:
@@ -217,6 +228,8 @@ func (c *Order) preparePlace(ctx context.Context, orderID string, expectLocked b
 		switch {
 		case errors.Is(err, persistence.ErrNotFound):
 			return nil, deleteOrder()
+		case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+			return nil, err
 		case err == nil:
 			order.Coupons[i] = coupon
 		default:
@@ -253,6 +266,8 @@ func (c *Order) preparePlace(ctx context.Context, orderID string, expectLocked b
 		return nil, deleteOrder()
 	case errors.Is(err, persistence.ErrLocked):
 		return nil, deleteOrder()
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		// success
 	default:
@@ -270,6 +285,8 @@ func (c *Order) preparePlace(ctx context.Context, orderID string, expectLocked b
 		return nil, ErrForbidden
 	case errors.Is(err, persistence.ErrLocked):
 		return nil, ErrLocked
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return nil, err
 	case err == nil:
 		// success
 	default:
@@ -296,6 +313,8 @@ func (c *Order) Delete(ctx context.Context, orderID string) error {
 		return ErrForbidden
 	case errors.Is(err, persistence.ErrLocked):
 		return ErrLocked
+	case errors.Is(err, context.Canceled), errors.Is(err, context.DeadlineExceeded):
+		return err
 	case err == nil:
 		return nil
 	default:
