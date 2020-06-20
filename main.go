@@ -95,6 +95,11 @@ func main() {
 		}),
 	)(handler)
 
+	// recover panics
+	handler = handlers.RecoveryHandler(
+		handlers.PrintRecoveryStack(true),
+	)(handler)
+
 	log.Fatal(http.ListenAndServe(":8080", handler))
 }
 
